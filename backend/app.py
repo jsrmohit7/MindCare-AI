@@ -73,7 +73,10 @@ def create_app() -> FastAPI:
         debug=settings.debug
     )
 
-    # 1. Register CORS Middleware
+    # 1. Register Logging & ID Middleware (Inner Layer)
+    fastapi_app.add_middleware(LoggingMiddleware)
+
+    # 2. Register CORS Middleware (Outer Layer)
     fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origins,
@@ -82,8 +85,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    # 2. Register Logging & ID Middleware
-    fastapi_app.add_middleware(LoggingMiddleware)
+    # Log resolved CORS origins for production diagnostic verification
+    logger.info(f"CORS Whitelisted Origins: {settings.cors_origins}")
 
     # 3. Register Global Exception Handlers
     fastapi_app.add_exception_handler(RequestValidationError, request_validation_exception_handler)

@@ -16,7 +16,7 @@ services:
       - key: MONGODB_DB
         value: mindcare_ai
       - key: CORS_ORIGINS
-        value: https://mindcare-ai-4ays.onrender.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001
+        value: https://mindcare-frontend-4ays.onrender.com,https://mindcare-ai-4ays.onrender.com,http://localhost:3000,http://127.0.0.1:3000,http://localhost:3001,http://127.0.0.1:3001
       - key: IBM_API_KEY
         sync: false # Set IBM watsonx.ai API Key in Render Dashboard
       - key: IBM_PROJECT_ID
