@@ -5,7 +5,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorState from "@/components/ErrorState";
 import Card from "@/components/Card";
 import Link from "next/link";
-import NearbyProfessionals from "@/components/NearbyProfessionals";
+
 import { 
   BrainCircuit, 
   CheckCircle2, 
@@ -17,7 +17,9 @@ import {
   ArrowLeft,
   Moon,
   Leaf,
-  Zap
+  Zap,
+  Stethoscope,
+  ArrowRight
 } from "lucide-react";
 
 interface ResultsClientProps {
@@ -263,8 +265,27 @@ export default function ResultsClient({ id }: ResultsClientProps) {
             <p className="text-sm leading-relaxed text-slate-300">{ai_analysis.follow_up}</p>
           </Card>
 
-          {/* Nearby Professionals Recommendation Section */}
-          <NearbyProfessionals severity={risk_profile.overall_risk?.level || "Minimal"} />
+          {/* Need Professional Help promotion card */}
+          <Card className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 space-y-4 shadow-xl backdrop-blur-xl">
+            <div className="flex items-center space-x-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+                <Stethoscope className="h-6 w-6" />
+              </div>
+              <div className="space-y-0.5">
+                <h3 className="text-lg font-bold text-white">Need Professional Help?</h3>
+                <p className="text-xs text-slate-400">Based on your assessment, you may benefit from consulting a mental health professional.</p>
+              </div>
+            </div>
+            <div className="pt-2 flex justify-end">
+              <Link
+                href="/consult"
+                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/15 inline-flex items-center"
+              >
+                <span>Find Professionals</span>
+                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </Card>
 
           {/* Disclaimer & Metadata */}
           <div className="space-y-4">

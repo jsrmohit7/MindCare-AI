@@ -20,11 +20,13 @@ import {
   Clock, 
   BookOpen, 
   ChevronRight, 
-  Settings 
+  Settings,
+  Stethoscope,
+  ArrowRight
 } from "lucide-react";
 import Link from "next/link";
 import { dailyWellnessService, DailyCheckInRecord } from "@/services/dailyWellness";
-import NearbyProfessionals from "@/components/NearbyProfessionals";
+
 
 // Lazy load analytics charts to avoid blocking Next.js initial SSR render
 const AnalyticsCharts = dynamic(() => import("@/components/daily-checkin/AnalyticsCharts"), {
@@ -430,9 +432,26 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* 6. Dedicated Nearby Mental Health Professionals Widget */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl">
-          <NearbyProfessionals severity={latestAssessment?.risk_profile?.overall_risk?.level || "Minimal"} />
+        {/* 6. Need Professional Support? */}
+        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl space-y-4">
+          <div className="flex items-center space-x-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
+              <Stethoscope className="h-6 w-6" />
+            </div>
+            <div className="space-y-0.5">
+              <h3 className="text-lg font-bold text-white">Need Professional Support?</h3>
+              <p className="text-xs text-slate-400">If you want to speak with a licensed mental health professional, visit the Consult page.</p>
+            </div>
+          </div>
+          <div className="pt-2 flex justify-end">
+            <Link
+              href="/consult"
+              className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/15 inline-flex items-center"
+            >
+              <span>Go to Consult</span>
+              <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+            </Link>
+          </div>
         </div>
 
         {/* Quick Actions Grid list */}
