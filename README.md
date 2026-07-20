@@ -76,3 +76,27 @@ If you prefer to run a local database instead of MongoDB Atlas:
    This spins up a local MongoDB instance (`localhost:27017`) and Mongo Express dashboard (`localhost:8081`).
 2. Update the `MONGODB_URL` in `backend/.env` to `mongodb://localhost:27017`.
 
+
+---
+
+## Nearby Mental Health Professionals Recommendation
+
+The application includes an advanced, interactive post-assessment recommendation component that displays nearby psychiatrists, clinical psychologists, clinics, counseling centers, and psychiatric hospitals.
+
+### Core Capabilities
+* **Intelligent Severity Guidance**: Dynamically scales recommended resource lists, prioritizes category sorting (e.g. hospitals first for Severe cases), and adjusts guidance warnings depending on the patient's severity level.
+* **Dual Places Providers**:
+  * *Google Places API*: Checks for `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in environment variables. If present, it loads the Google client JS SDK dynamically.
+  * *OpenStreetMap (OSM) Fallback*: If the API key is absent or empty, it automatically queries the OSM Overpass API and geocodes manual search inputs using OSM Nominatim.
+* **Interactive Maps**: Integrates customized Google Maps (when API key is active) or Leaflet + OpenStreetMap interactive overlays client-side.
+* **Manual Location Input**: Users can query GPS or type any address (City, Landmark, PIN code) to search another area.
+* **Privacy Preserved**: Never transmits coordinates or locations to the backend; all geocoding matches are resolved on the frontend.
+
+### Setup & Environment Variables
+To enable Google Maps integrations, set the following variable in your local frontend configuration:
+
+```env
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-api-key-here
+```
+If this key is left undefined, the app will automatically load Leaflet + OpenStreetMap and function with zero API key dependencies.
+

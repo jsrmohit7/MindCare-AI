@@ -5,6 +5,7 @@ import LoadingSpinner from "@/components/LoadingSpinner";
 import ErrorState from "@/components/ErrorState";
 import Card from "@/components/Card";
 import Link from "next/link";
+import NearbyProfessionals from "@/components/NearbyProfessionals";
 import { 
   BrainCircuit, 
   CheckCircle2, 
@@ -261,6 +262,9 @@ export default function ResultsClient({ id }: ResultsClientProps) {
             <h3 className="font-extrabold text-indigo-300">Follow-up Protocols</h3>
             <p className="text-sm leading-relaxed text-slate-300">{ai_analysis.follow_up}</p>
           </Card>
+
+          {/* Nearby Professionals Recommendation Section */}
+          <NearbyProfessionals severity={risk_profile.overall_risk?.level || "Minimal"} />
 
           {/* Disclaimer & Metadata */}
           <div className="space-y-4">
