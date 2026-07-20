@@ -1,0 +1,41 @@
+from fastapi import Depends
+from config.database import get_database
+from repositories.assessment_repository import AssessmentRepository
+from services.analysis_engine import AnalysisEngine
+from services.assessment_service import AssessmentService
+from services.prompt_builder import build_prompt
+from services.granite_service import GraniteService
+from services.response_validator import ResponseValidator
+import services.risk_engine as risk_engine
+
+
+def get_assessment_repository(db=Depends(get_database)) -> AssessmentRepository:
+    """
+    Provides a request-scoped AssessmentRepository instance.
+    """
+    return AssessmentRepository(db)
+
+
+def get_analysis_engine() -> AnalysisEngine:
+    """
+    Provides a request-scoped/stateless AnalysisEngine instance.
+    """
+    return AnalysisEngine(
+        prompt_builder=build_prompt,
+        granite_service=GraniteService(),
+        response_validator=ResponseValidator()
+    )
+
+
+def get_assessment_service(
+    repository: AssessmentRepository = Depends(get_assessment_repository),
+    analysis_engine: AnalysisEngine = Depends(get_analysis_engine)
+) -> AssessmentService:
+    """
+    Provides a request-scoped AssessmentService instance.
+    """
+    return AssessmentService(
+        risk_engine=risk_engine,
+        analysis_engine=analysis_engine,
+        assessment_repository=repository
+    )

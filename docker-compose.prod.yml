@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mindcare_mongodb_prod
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=mindcare_ai
+    volumes:
+      - mongodb_prod_data:/data/db
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindcare_backend_prod
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      - MONGODB_URL=mongodb://mongodb:27017
+      - MONGODB_DB=mindcare_ai
+      - DEBUG=False
+      - CORS_ORIGINS=http://localhost:3000
+      # Secrets should be mounted or injected via environment variables at runtime:
+      # - IBM_API_KEY
+      # - IBM_PROJECT_ID
+      # - IBM_URL
+      # - IBM_GRANITE_MODEL
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mindcare_frontend_prod
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mongodb_prod_data:
+    driver: local

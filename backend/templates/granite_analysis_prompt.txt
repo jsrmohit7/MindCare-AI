@@ -1,0 +1,15 @@
+================================================================================
+PROMPT METADATA
+================================================================================
+Prompt Version: 1.0
+Source: MindCare AI Prompt Builder
+Target Model: IBM Granite
+Assessment Type: Clinical Screening Summary
+
+{system_prompt}
+
+{input_section}
+
+{task_section}
+
+{output_schema}

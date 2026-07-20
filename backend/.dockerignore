@@ -1,0 +1,42 @@
+# Ignore Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.log
+.pytest_cache/
+
+# Ignore Environment configs
+.env
+.env.production
+.env.local
+.env.test
+
+# Ignore Version control
+.git/
+.gitignore
+.gitattributes
+
+# Ignore IDE and OS artifacts
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Ignore local reports or manual test logs
+reports/
+*.log
+manual_*_test.py

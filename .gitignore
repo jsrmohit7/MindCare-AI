@@ -1,0 +1,74 @@
+# MindCare AI Root Gitignore
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+python/
+backend/venv/
+backend/.venv/
+
+# Node.js dependencies
+node_modules/
+frontend/node_modules/
+jspm_packages/
+.pnp
+.pnp.*
+
+# Next.js build output and caching
+.next/
+frontend/.next/
+out/
+frontend/out/
+build/
+dist/
+
+# Python cache and temporary files
+__pycache__/
+backend/**/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.ipynb_checkpoints/
+
+# Environment files and credentials (secrets)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+*.key
+backend/.env
+frontend/.env.local
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+logs/
+
+# Testing and Coverage
+coverage/
+.nyc_output/
+htmlcov/

@@ -1,0 +1,53 @@
+services:
+  # -------------------------------------------------------
+  # Backend Service: FastAPI
+  # -------------------------------------------------------
+  - type: web
+    name: mindcare-backend
+    env: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: starter
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT --workers 4
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: DEBUG
+        value: "False"
+      - key: MONGODB_URL
+        fromDatabase:
+          name: mindcare-mongodb
+          property: connectionString
+      - key: MONGODB_DB
+        value: mindcare_ai
+      - key: CORS_ORIGINS
+        value: https://mindcare-frontend.onrender.com
+      - key: IBM_API_KEY
+        sync: false # Set in Render Dashboard
+      - key: IBM_PROJECT_ID
+        sync: false # Set in Render Dashboard
+      - key: IBM_URL
+        value: https://us-south.ml.cloud.ibm.com
+      - key: IBM_GRANITE_MODEL
+        value: ibm/granite-13b-instruct-v2
+
+  # -------------------------------------------------------
+  # Frontend Service: Next.js
+  # -------------------------------------------------------
+  - type: web
+    name: mindcare-frontend
+    env: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    plan: starter
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: https://mindcare-backend.onrender.com/api/v1
+
+databases:
+  # -------------------------------------------------------
+  # Database Service: MongoDB
+  # -------------------------------------------------------
+  - name: mindcare-mongodb
+    plan: starter
+    databaseName: mindcare_ai

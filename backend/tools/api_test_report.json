@@ -1,0 +1,28 @@
+{
+  "base": "http://127.0.0.1:8000",
+  "timestamp": 1784436218.5069892,
+  "results": [
+    {
+      "path": "/health",
+      "method": "GET",
+      "summary": "Health Check",
+      "url": "http://127.0.0.1:8000/health",
+      "status_code": 200,
+      "ok": true,
+      "response": {
+        "status": "healthy"
+      }
+    },
+    {
+      "path": "/health/db",
+      "method": "GET",
+      "summary": "Health Db Check",
+      "url": "http://127.0.0.1:8000/health/db",
+      "status_code": 200,
+      "ok": true,
+      "response": {
+        "database": "connected"
+      }
+    }
+  ]
+}
