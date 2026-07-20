@@ -50,7 +50,7 @@ class Settings(BaseModel):
     @field_validator("ibm_url")
     @classmethod
     def validate_ibm_url(cls, v: str) -> str:
-        v = v.strip().strip("'").strip('"')
+        v = v.strip().strip("'").strip('"').rstrip('/')
         if not v:
             raise ValueError("Configuration setting 'ibm_url' is required and cannot be empty.")
         if not v.startswith("https://"):
