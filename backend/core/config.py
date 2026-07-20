@@ -47,7 +47,20 @@ class Settings(BaseModel):
         "https://mindcare-ai-4ays.onrender.com"
     ])))
 
-    @field_validator("mongodb_url", "ibm_api_key", "ibm_project_id", "ibm_url", "ibm_granite_model")
+    @field_validator("ibm_url")
+    @classmethod
+    def validate_ibm_url(cls, v: str) -> str:
+        v = v.strip().strip("'").strip('"')
+        if not v:
+            raise ValueError("Configuration setting 'ibm_url' is required and cannot be empty.")
+        if not v.startswith("https://"):
+            if v.startswith("http://"):
+                v = "https://" + v[7:]
+            else:
+                v = "https://" + v
+        return v
+
+    @field_validator("mongodb_url", "ibm_api_key", "ibm_project_id", "ibm_granite_model")
     @classmethod
     def validate_required_secrets(cls, v: str, info) -> str:
         if not v:
