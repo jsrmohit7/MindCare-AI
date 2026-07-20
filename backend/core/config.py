@@ -26,13 +26,13 @@ class Settings(BaseModel):
     """
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
-    mongodb_url: str = Field(validate_default=True, default_factory=lambda: os.getenv("MONGODB_URL", "").strip())
-    mongodb_db: str = Field(default_factory=lambda: os.getenv("MONGODB_DB", "mindcare_ai").strip())
+    mongodb_url: str = Field(validate_default=True, default_factory=lambda: os.getenv("MONGODB_URL", "").strip().strip("'").strip('"'))
+    mongodb_db: str = Field(default_factory=lambda: os.getenv("MONGODB_DB", "mindcare_ai").strip().strip("'").strip('"'))
     
-    ibm_api_key: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_API_KEY", "").strip())
-    ibm_project_id: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_PROJECT_ID", "").strip())
-    ibm_url: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_URL", "").strip())
-    ibm_granite_model: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_GRANITE_MODEL", "").strip())
+    ibm_api_key: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_API_KEY", "").strip().strip("'").strip('"'))
+    ibm_project_id: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_PROJECT_ID", "").strip().strip("'").strip('"'))
+    ibm_url: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_URL", "").strip().strip("'").strip('"'))
+    ibm_granite_model: str = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_GRANITE_MODEL", "").strip().strip("'").strip('"'))
     
     ibm_timeout_seconds: float = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_TIMEOUT_SECONDS", "30.0"))
     ibm_max_new_tokens: int = Field(validate_default=True, default_factory=lambda: os.getenv("IBM_MAX_NEW_TOKENS", "1000"))
