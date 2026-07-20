@@ -40,9 +40,12 @@ class Settings(BaseModel):
     api_title: str = "MindCare AI API"
     api_version: str = "0.1.0"
     debug: bool = Field(default_factory=lambda: os.getenv("DEBUG", "False").lower() in ("true", "1", "t"))
-    cors_origins: List[str] = Field(default_factory=lambda: [
+    cors_origins: List[str] = Field(default_factory=lambda: list(set([
         origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",") if origin.strip()
-    ])
+    ] + [
+        "https://mindcare-frontend-4ays.onrender.com",
+        "https://mindcare-ai-4ays.onrender.com"
+    ])))
 
     @field_validator("mongodb_url", "ibm_api_key", "ibm_project_id", "ibm_url", "ibm_granite_model")
     @classmethod
