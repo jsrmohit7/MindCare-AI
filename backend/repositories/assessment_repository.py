@@ -32,16 +32,18 @@ class AssessmentRepository:
 
         return document
 
-    async def save_assessment(self, assessment: Dict[str, Any]) -> str:
+    async def save_assessment(self, assessment: Dict[str, Any], user_id: str) -> str:
         """
-        Insert the assessment document as-is into MongoDB.
+        Insert the assessment document with the associated user_id into MongoDB.
 
         Args:
             assessment: The assessment dictionary.
+            user_id: The string representation of the user's ObjectId.
 
         Returns:
             The string version of the generated ObjectId.
         """
+        assessment["user_id"] = user_id
         result = await self.collection.insert_one(assessment)
         return str(result.inserted_id)
 
@@ -61,17 +63,18 @@ class AssessmentRepository:
         doc = await self.collection.find_one({"_id": ObjectId(assessment_id)})
         return self._serialize_document(doc)
 
-    async def list_assessments(self, limit: int = DEFAULT_LIST_LIMIT) -> List[Dict[str, Any]]:
+    async def list_assessments(self, user_id: str, limit: int = DEFAULT_LIST_LIMIT) -> List[Dict[str, Any]]:
         """
-        Retrieve the newest assessments first up to the limit.
+        Retrieve the newest assessments belonging to the specified user up to the limit.
 
         Args:
+            user_id: The string representation of the user's ObjectId.
             limit: The maximum number of assessments to return.
 
         Returns:
             A list of serialized assessment dictionaries.
         """
-        cursor = self.collection.find().sort("_id", -1)
+        cursor = self.collection.find({"user_id": user_id}).sort("_id", -1)
         docs = await cursor.to_list(length=limit)
         return [self._serialize_document(doc) for doc in docs if doc is not None]
 

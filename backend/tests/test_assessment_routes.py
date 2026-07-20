@@ -6,6 +6,7 @@ from fastapi import status
 from app import app
 from api.dependencies import get_assessment_service
 from services.response_validator import GraniteValidationError
+from services.auth import get_current_user
 
 
 class TestAssessmentRoutes(unittest.TestCase):
@@ -15,6 +16,7 @@ class TestAssessmentRoutes(unittest.TestCase):
         
         # Override the dependency provider to inject our mock service
         app.dependency_overrides[get_assessment_service] = lambda: self.mock_service
+        app.dependency_overrides[get_current_user] = lambda: {"_id": "507f1f77bcf86cd799439011", "email": "test@example.com"}
         self.client = TestClient(app)
 
         # Setup sample data matching models/request_models
@@ -32,6 +34,7 @@ class TestAssessmentRoutes(unittest.TestCase):
         self.mock_assessment_id = "507f1f77bcf86cd799439011"
         self.sample_assessment = {
             "_id": self.mock_assessment_id,
+            "user_id": "507f1f77bcf86cd799439011",
             "risk_profile": {"overall_risk": "Moderate"},
             "ai_analysis": {
                 "summary": "This is a summary",
@@ -81,7 +84,7 @@ class TestAssessmentRoutes(unittest.TestCase):
         self.assertEqual(res_data["risk_profile"], self.sample_assessment["risk_profile"])
         
         # Verify call arguments
-        self.mock_service.create_assessment.assert_called_once_with(self.sample_request)
+        self.mock_service.create_assessment.assert_called_once_with(self.sample_request, "507f1f77bcf86cd799439011")
 
     def test_create_assessment_validation_failure(self):
         # Modify request to make it invalid (q1 is out of range)
@@ -169,7 +172,7 @@ class TestAssessmentRoutes(unittest.TestCase):
         self.assertEqual(len(res_data["assessments"]), 1)
         self.assertEqual(res_data["assessments"][0]["id"], self.mock_assessment_id)
         
-        self.mock_service.list_assessments.assert_called_once_with(limit=10)
+        self.mock_service.list_assessments.assert_called_once_with(user_id="507f1f77bcf86cd799439011", limit=10)
 
     def test_list_assessments_invalid_limit(self):
         # Execute GET with out-of-bounds limit parameter
@@ -181,6 +184,7 @@ class TestAssessmentRoutes(unittest.TestCase):
 
     def test_delete_assessment_success(self):
         # Setup mock behavior
+        self.mock_service.get_assessment = AsyncMock(return_value=self.sample_assessment)
         self.mock_service.delete_assessment = AsyncMock(return_value=True)
 
         # Execute DELETE
@@ -193,14 +197,14 @@ class TestAssessmentRoutes(unittest.TestCase):
 
     def test_delete_assessment_not_found(self):
         # Setup mock behavior
-        self.mock_service.delete_assessment = AsyncMock(return_value=False)
+        self.mock_service.get_assessment = AsyncMock(return_value=None)
 
         # Execute DELETE
         response = self.client.delete(f"/api/v1/assessments/{self.mock_assessment_id}")
 
         # Assertions
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.mock_service.delete_assessment.assert_called_once_with(self.mock_assessment_id)
+        self.mock_service.delete_assessment.assert_not_called()
 
     def test_delete_assessment_invalid_id(self):
         # Execute DELETE with malformed ID

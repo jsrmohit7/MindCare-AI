@@ -7,6 +7,7 @@ from models.response_models import AssessmentResponse, AssessmentListResponse
 from api.dependencies import get_assessment_service
 from services.assessment_service import AssessmentService
 from services.response_validator import GraniteValidationError
+from services.auth import get_current_user
 
 router = APIRouter(
     prefix="/assessments",
@@ -46,11 +47,13 @@ def assessment_health() -> Dict[str, str]:
 )
 async def create_assessment(
     request: AssessmentRequest,
+    current_user: dict = Depends(get_current_user),
     assessment_service: AssessmentService = Depends(get_assessment_service)
 ) -> Dict[str, Any]:
     try:
         answers = request.model_dump()
-        return await assessment_service.create_assessment(answers)
+        user_id = str(current_user["_id"])
+        return await assessment_service.create_assessment(answers, user_id)
     except GraniteValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -78,6 +81,7 @@ async def create_assessment(
 )
 async def get_assessment(
     assessment_id: str,
+    current_user: dict = Depends(get_current_user),
     assessment_service: AssessmentService = Depends(get_assessment_service)
 ) -> Dict[str, Any]:
     if not ObjectId.is_valid(assessment_id):
@@ -91,6 +95,13 @@ async def get_assessment(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Assessment not found"
+        )
+
+    # Check ownership
+    if doc.get("user_id") != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this assessment"
         )
 
     return doc
@@ -110,9 +121,11 @@ async def get_assessment(
 )
 async def list_assessments(
     limit: int = Query(default=20, ge=1, le=100),
+    current_user: dict = Depends(get_current_user),
     assessment_service: AssessmentService = Depends(get_assessment_service)
 ) -> Dict[str, Any]:
-    docs = await assessment_service.list_assessments(limit=limit)
+    user_id = str(current_user["_id"])
+    docs = await assessment_service.list_assessments(user_id=user_id, limit=limit)
     return {"assessments": docs}
 
 
@@ -130,6 +143,7 @@ async def list_assessments(
 )
 async def delete_assessment(
     assessment_id: str,
+    current_user: dict = Depends(get_current_user),
     assessment_service: AssessmentService = Depends(get_assessment_service)
 ) -> None:
     if not ObjectId.is_valid(assessment_id):
@@ -138,11 +152,19 @@ async def delete_assessment(
             detail="Invalid assessment ID format"
         )
 
-    deleted = await assessment_service.delete_assessment(assessment_id)
-    if not deleted:
+    doc = await assessment_service.get_assessment(assessment_id)
+    if doc is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Assessment not found"
         )
 
+    # Check ownership
+    if doc.get("user_id") != str(current_user["_id"]):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this assessment"
+        )
+
+    await assessment_service.delete_assessment(assessment_id)
     return None

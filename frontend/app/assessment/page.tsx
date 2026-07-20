@@ -8,6 +8,7 @@ import * as z from "zod";
 import { ChevronLeft, ChevronRight, Info, Sparkles } from "lucide-react";
 
 import Button from "@/components/Button";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Card from "@/components/Card";
 import ProgressBar from "@/components/ProgressBar";
 import LoadingSpinner from "@/components/LoadingSpinner";
@@ -119,7 +120,7 @@ const stressOptions = [
   { value: 5, label: "Very Often" },
 ];
 
-export default function AssessmentPage() {
+function AssessmentPage() {
   const [step, setStep] = useState(1);
   const router = useRouter();
   const createAssessmentMutation = useCreateAssessment();
@@ -663,5 +664,13 @@ export default function AssessmentPage() {
         </form>
       </FormProvider>
     </div>
+  );
+}
+
+export default function ProtectedAssessmentPage() {
+  return (
+    <ProtectedRoute>
+      <AssessmentPage />
+    </ProtectedRoute>
   );
 }

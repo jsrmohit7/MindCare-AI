@@ -11,6 +11,20 @@ export const api = axios.create({
   },
 });
 
+// Request interceptor to attach JWT token if present in localStorage
+api.interceptors.request.use(
+  (config) => {
+    if (typeof window !== "undefined") {
+      const token = localStorage.getItem("token");
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Response interceptor to clean up error structure and raise consistent errors
 api.interceptors.response.use(
   (response) => response,

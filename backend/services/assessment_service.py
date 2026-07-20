@@ -21,13 +21,15 @@ class AssessmentService:
 
     async def create_assessment(
         self,
-        questionnaire_answers: Dict[str, Any]
+        questionnaire_answers: Dict[str, Any],
+        user_id: str
     ) -> Dict[str, Any]:
         """
         Generate and persist a complete assessment.
 
         Args:
             questionnaire_answers: The raw questionnaire answers dictionary.
+            user_id: The string representation of the user's ObjectId.
 
         Returns:
             A dictionary containing the persisted assessment with the MongoDB _id.
@@ -39,7 +41,7 @@ class AssessmentService:
         assessment = self.analysis_engine.generate_assessment(risk_profile)
 
         # 3. Save assessment to repository
-        assessment_id = await self.assessment_repository.save_assessment(assessment)
+        assessment_id = await self.assessment_repository.save_assessment(assessment, user_id)
 
         # 4. Motor mutates the assessment dict in-place by injecting _id as ObjectId.
         #    We must remove it and use the already-stringified assessment_id instead.
@@ -63,17 +65,18 @@ class AssessmentService:
         """
         return await self.assessment_repository.get_assessment_by_id(assessment_id)
 
-    async def list_assessments(self, limit: int = 20) -> List[Dict[str, Any]]:
+    async def list_assessments(self, user_id: str, limit: int = 20) -> List[Dict[str, Any]]:
         """
         Retrieve the newest assessments up to the limit.
 
         Args:
+            user_id: The string representation of the user's ObjectId.
             limit: The maximum number of assessments to return.
 
         Returns:
             A list of serialized assessment dictionaries.
         """
-        return await self.assessment_repository.list_assessments(limit=limit)
+        return await self.assessment_repository.list_assessments(user_id=user_id, limit=limit)
 
     async def delete_assessment(self, assessment_id: str) -> bool:
         """

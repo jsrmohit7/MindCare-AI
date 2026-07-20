@@ -36,7 +36,7 @@ class TestAssessmentService(unittest.IsolatedAsyncioTestCase):
         self.mock_assessment_repository.save_assessment = AsyncMock(return_value=self.inserted_id)
 
         # Execute
-        result = await self.service.create_assessment(self.questionnaire_answers)
+        result = await self.service.create_assessment(self.questionnaire_answers, "dummy_user_id")
 
         # Assertions: call counts
         self.mock_risk_engine.analyze_questionnaire.assert_called_once()
@@ -46,7 +46,7 @@ class TestAssessmentService(unittest.IsolatedAsyncioTestCase):
         # Assertions: argument verification
         self.mock_risk_engine.analyze_questionnaire.assert_called_with(self.questionnaire_answers)
         self.mock_analysis_engine.generate_assessment.assert_called_with(self.risk_profile)
-        self.mock_assessment_repository.save_assessment.assert_called_with(self.assessment)
+        self.mock_assessment_repository.save_assessment.assert_called_with(self.assessment, "dummy_user_id")
 
         # Assertions: returned object contains _id
         self.assertEqual(result["_id"], self.inserted_id)
@@ -62,7 +62,7 @@ class TestAssessmentService(unittest.IsolatedAsyncioTestCase):
 
         # Execute and Assert exception propagates
         with self.assertRaises(Exception) as ctx:
-            await self.service.create_assessment(self.questionnaire_answers)
+            await self.service.create_assessment(self.questionnaire_answers, "dummy_user_id")
         self.assertEqual(str(ctx.exception), "RiskEngine error")
 
         # Verify downstream components were never called
@@ -76,7 +76,7 @@ class TestAssessmentService(unittest.IsolatedAsyncioTestCase):
 
         # Execute and Assert exception propagates
         with self.assertRaises(Exception) as ctx:
-            await self.service.create_assessment(self.questionnaire_answers)
+            await self.service.create_assessment(self.questionnaire_answers, "dummy_user_id")
         self.assertEqual(str(ctx.exception), "AnalysisEngine error")
 
         # Verify downstream components were never called
@@ -93,13 +93,13 @@ class TestAssessmentService(unittest.IsolatedAsyncioTestCase):
 
         # Execute and Assert exception propagates
         with self.assertRaises(Exception) as ctx:
-            await self.service.create_assessment(self.questionnaire_answers)
+            await self.service.create_assessment(self.questionnaire_answers, "dummy_user_id")
         self.assertEqual(str(ctx.exception), "Database save error")
 
         # Verify upstream components were called correctly
         self.mock_risk_engine.analyze_questionnaire.assert_called_once_with(self.questionnaire_answers)
         self.mock_analysis_engine.generate_assessment.assert_called_once_with(self.risk_profile)
-        self.mock_assessment_repository.save_assessment.assert_called_once_with(self.assessment)
+        self.mock_assessment_repository.save_assessment.assert_called_once_with(self.assessment, "dummy_user_id")
 
 
 if __name__ == "__main__":

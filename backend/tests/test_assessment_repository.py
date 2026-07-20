@@ -27,11 +27,11 @@ class TestAssessmentRepository(unittest.IsolatedAsyncioTestCase):
         self.mock_collection.insert_one = AsyncMock(return_value=mock_result)
 
         # Execute
-        result_id = await self.repo.save_assessment(self.sample_assessment)
+        result_id = await self.repo.save_assessment(self.sample_assessment, "dummy_user_id")
 
         # Assertions
         self.assertEqual(result_id, str(mock_id))
-        # Verify the database was called with the exact, unmodified dict
+        # Verify the database was called with the exact dict (including user_id)
         self.mock_collection.insert_one.assert_awaited_once_with(self.sample_assessment)
 
     async def test_get_assessment_by_id_success(self):
@@ -87,10 +87,10 @@ class TestAssessmentRepository(unittest.IsolatedAsyncioTestCase):
         mock_cursor.to_list = AsyncMock(return_value=mock_docs)
 
         # Execute
-        result = await self.repo.list_assessments(limit=5)
+        result = await self.repo.list_assessments(user_id="dummy_user_id", limit=5)
 
         # Assertions
-        self.mock_collection.find.assert_called_once()
+        self.mock_collection.find.assert_called_once_with({"user_id": "dummy_user_id"})
         mock_cursor.sort.assert_called_once_with("_id", -1)
         mock_cursor.to_list.assert_awaited_once_with(length=5)
         
@@ -106,10 +106,11 @@ class TestAssessmentRepository(unittest.IsolatedAsyncioTestCase):
         mock_cursor.to_list = AsyncMock(return_value=[])
 
         # Execute
-        result = await self.repo.list_assessments()
+        result = await self.repo.list_assessments(user_id="dummy_user_id")
 
         # Assertions
         self.assertEqual(result, [])
+        self.mock_collection.find.assert_called_once_with({"user_id": "dummy_user_id"})
         mock_cursor.to_list.assert_awaited_once_with(length=20)
 
     async def test_delete_assessment_success(self):

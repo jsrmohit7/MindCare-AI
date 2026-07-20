@@ -8,8 +8,9 @@ import Card from "@/components/Card";
 import Button from "@/components/Button";
 import Link from "next/link";
 import { History, Eye, Trash2, RefreshCw, Calendar, Activity, Sparkles } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
-export default function HistoryPage() {
+function HistoryPage() {
   const { data: assessments, isLoading, isError, error, refetch, isRefetching } = useAssessments(30);
   const deleteMutation = useDeleteAssessment();
 
@@ -140,5 +141,13 @@ export default function HistoryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function ProtectedHistoryPage() {
+  return (
+    <ProtectedRoute>
+      <HistoryPage />
+    </ProtectedRoute>
   );
 }

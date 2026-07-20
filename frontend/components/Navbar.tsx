@@ -2,15 +2,26 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Activity, History, ClipboardList } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { Activity, History, ClipboardList, LayoutDashboard, User, LogIn, UserPlus, LogOut } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { user, logout } = useAuth();
 
-  const navItems = [
+  const authenticatedItems = [
+    { name: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { name: "New Assessment", path: "/assessment", icon: ClipboardList },
     { name: "History", path: "/history", icon: History },
+    { name: "Profile", path: "/profile", icon: User },
   ];
+
+  const anonymousItems = [
+    { name: "Login", path: "/login", icon: LogIn },
+    { name: "Register", path: "/register", icon: UserPlus },
+  ];
+
+  const items = user ? authenticatedItems : anonymousItems;
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-white/10 bg-slate-950/80 backdrop-blur-md">
@@ -26,25 +37,35 @@ export default function Navbar() {
               </span>
             </Link>
           </div>
-          <div className="flex space-x-4">
-            {navItems.map((item) => {
+          <div className="flex items-center space-x-2 sm:space-x-4">
+            {items.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.path;
               return (
                 <Link
                   key={item.path}
                   href={item.path}
-                  className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-sm font-medium transition-all duration-300 ${
+                  className={`flex items-center space-x-2 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-300 ${
                     isActive
                       ? "bg-white/10 text-white shadow-inner"
                       : "text-slate-400 hover:bg-white/5 hover:text-white"
                   }`}
                 >
                   <Icon className="h-4 w-4" />
-                  <span>{item.name}</span>
+                  <span className="hidden sm:inline">{item.name}</span>
                 </Link>
               );
             })}
+            
+            {user && (
+              <button
+                onClick={logout}
+                className="flex items-center space-x-2 rounded-xl px-3 py-2 text-sm font-medium text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-all duration-300"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </button>
+            )}
           </div>
         </div>
       </div>

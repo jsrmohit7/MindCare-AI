@@ -22,7 +22,9 @@ class TestInfrastructure(unittest.TestCase):
         # Instantiate app factory
         self.app = create_app()
         from config.database import get_database
+        from services.auth import get_current_user
         self.app.dependency_overrides[get_database] = lambda: MagicMock()
+        self.app.dependency_overrides[get_current_user] = lambda: {"_id": "507f1f77bcf86cd799439011", "email": "test@example.com"}
         self.client = TestClient(self.app)
 
     def tearDown(self):
