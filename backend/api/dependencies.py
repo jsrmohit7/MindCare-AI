@@ -39,3 +39,16 @@ def get_assessment_service(
         analysis_engine=analysis_engine,
         assessment_repository=repository
     )
+
+
+# Daily Wellness Dependencies
+from repositories.daily_wellness_repository import DailyWellnessRepository
+from services.daily_wellness_service import DailyWellnessService
+
+def get_daily_wellness_repository(db=Depends(get_database)) -> DailyWellnessRepository:
+    return DailyWellnessRepository(db)
+
+def get_daily_wellness_service(
+    repository: DailyWellnessRepository = Depends(get_daily_wellness_repository)
+) -> DailyWellnessService:
+    return DailyWellnessService(repository, GraniteService())
