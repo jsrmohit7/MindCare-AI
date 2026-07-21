@@ -4,6 +4,8 @@ import React, { useState, useEffect } from "react";
 import { privacyAdminService, PrivacySummary } from "@/services/privacyAdmin";
 import { ShieldCheck, Download, Trash2, AlertTriangle, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Card from "@/components/Card";
 
 export default function PrivacyPage() {
   const { logout } = useAuth();
@@ -75,32 +77,32 @@ export default function PrivacyPage() {
   };
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 p-6 md:p-12">
-      <div className="max-w-4xl mx-auto space-y-8">
+    <ProtectedRoute>
+      <div className="max-w-4xl mx-auto space-y-8 py-6">
         
         {/* Header */}
-        <header>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent flex items-center gap-2">
-            <ShieldCheck className="h-8 w-8 text-indigo-400 shrink-0" />
+        <header className="border-b border-white/[0.04] pb-6">
+          <h1 className="text-2xl font-extrabold tracking-tight text-white flex items-center gap-2.5">
+            <ShieldCheck className="h-6 w-6 text-indigo-400 shrink-0" />
             GDPR Privacy Center
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Review the information MindCare AI holds about you, download your records, or purge categories.
+          <p className="text-slate-400 text-xs mt-1.5 leading-relaxed">
+            Review the information MindCare AI holds about you, download portable JSON logs, or selectively purge data categories.
           </p>
         </header>
 
         {message && (
-          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4 flex items-start gap-2 text-emerald-400 text-xs">
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4.5 flex items-start gap-2.5 text-emerald-400 text-xs">
             <CheckCircle2 className="h-4.5 w-4.5 shrink-0 mt-0.5" />
             <span>{message}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           
           {/* Data Portability / Export */}
-          <section className="md:col-span-6 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl space-y-4 text-left">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-200">
+          <Card className="space-y-4">
+            <h2 className="text-base font-bold flex items-center gap-2 text-slate-200">
               <Download className="h-5 w-5 text-indigo-400" />
               Data Portability
             </h2>
@@ -110,16 +112,16 @@ export default function PrivacyPage() {
             <button
               onClick={handleExport}
               disabled={exporting}
-              className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs p-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+              className="w-full inline-flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs p-3 rounded-2xl transition-all shadow-md shadow-indigo-500/10 active:scale-95 focus:outline-none"
             >
               <Download className="h-4 w-4" />
               {exporting ? "Compiling Export..." : "Download JSON Archive"}
             </button>
-          </section>
+          </Card>
 
           {/* Delete Account */}
-          <section className="md:col-span-6 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl space-y-4 text-left">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-rose-400">
+          <Card className="space-y-4">
+            <h2 className="text-base font-bold flex items-center gap-2 text-rose-400">
               <Trash2 className="h-5 w-5 text-rose-400" />
               Delete Account
             </h2>
@@ -128,24 +130,24 @@ export default function PrivacyPage() {
             </p>
             <button
               onClick={handleDeleteAccount}
-              className="w-full inline-flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white font-bold text-xs p-3 rounded-xl transition-all"
+              className="w-full inline-flex items-center justify-center gap-2 bg-rose-500/10 hover:bg-rose-600 border border-rose-500/20 text-rose-400 hover:text-white font-bold text-xs p-3 rounded-2xl transition-all active:scale-95 focus:outline-none"
             >
               <ShieldAlert className="h-4 w-4" />
               Delete Account & Clear Records
             </button>
-          </section>
+          </Card>
 
           {/* Selective Content Purges */}
-          <section className="md:col-span-12 bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl space-y-6 text-left">
-            <h2 className="text-lg font-bold flex items-center gap-2 text-slate-200">
+          <Card className="md:col-span-2 space-y-6">
+            <h2 className="text-base font-bold flex items-center gap-2 text-slate-200">
               <Trash2 className="h-5 w-5 text-indigo-400" />
               Selective Data Purges
             </h2>
             
             {loading ? (
-              <div className="text-slate-500 text-xs text-center py-6">Calculating data counts...</div>
+              <div className="text-slate-500 text-xs text-center py-6 font-semibold">Calculating data counts...</div>
             ) : !summary ? (
-              <div className="text-slate-500 text-xs text-center py-6">Failed to load data metrics.</div>
+              <div className="text-slate-500 text-xs text-center py-6 font-semibold">Failed to load data metrics.</div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[
@@ -156,36 +158,35 @@ export default function PrivacyPage() {
                   { label: "Daily Check-Ins", category: "checkins", count: summary.daily_checkins },
                   { label: "AI Cognitive Profile", category: "memory", count: 1 },
                 ].map((item) => (
-                  <div key={item.category} className="bg-slate-950/40 border border-white/5 p-4 rounded-xl flex items-center justify-between gap-4">
+                  <div key={item.category} className="bg-slate-950/40 border border-white/[0.04] p-4 rounded-2xl flex items-center justify-between gap-4">
                     <div className="space-y-0.5">
                       <span className="font-bold text-slate-200 text-xs block">{item.label}</span>
-                      <span className="text-[10px] text-slate-500">Stored: {item.count} items</span>
+                      <span className="text-[10px] text-slate-500 font-semibold">Stored: {item.count} items</span>
                     </div>
                     <button
                       onClick={() => handlePurge(item.category, item.label)}
                       disabled={purging === item.category}
-                      className="p-2 bg-red-500/10 hover:bg-red-600 border border-red-500/20 text-red-400 hover:text-white rounded-lg transition-all"
+                      className="p-2.5 bg-red-500/10 hover:bg-red-600 border border-red-500/20 text-red-400 hover:text-white rounded-xl transition-all"
                       title={`Purge ${item.label}`}
                     >
-                      <Trash2 className="h-3.5 w-3.5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
                 ))}
               </div>
             )}
             
-            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[10px] p-4 rounded-xl flex items-start gap-2.5 italic">
-              <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400" />
+            <div className="bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[11px] p-4.5 rounded-2xl flex items-start gap-2.5 italic leading-relaxed">
+              <AlertTriangle className="h-4.5 w-4.5 shrink-0 text-amber-400 mt-0.5" />
               <span>
                 GDPR Warning: Purging a data category will completely remove all references to those logs. Your Unified Wellness Score and AI Coach recommendations will be recalculated based on your remaining profiles.
               </span>
             </div>
 
-          </section>
+          </Card>
 
         </div>
-
       </div>
-    </main>
+    </ProtectedRoute>
   );
 }

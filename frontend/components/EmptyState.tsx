@@ -16,15 +16,15 @@ export default function EmptyState({
   actionHref = "/assessment",
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-white/5 bg-slate-900/10 p-12 text-center backdrop-blur-md">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/5 text-slate-400">
-        <ClipboardList className="h-7 w-7" />
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-white/[0.04] bg-slate-900/20 p-12 text-center backdrop-blur-xl">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/[0.03] border border-white/[0.05] text-slate-400 mb-6 shadow-inner">
+        <ClipboardList className="h-6 w-6 text-indigo-400" />
       </div>
-      <h3 className="mt-6 text-xl font-bold text-slate-100">{title}</h3>
-      <p className="mt-2 text-sm text-slate-400 max-w-sm leading-relaxed">{message}</p>
+      <h3 className="text-lg font-bold text-white">{title}</h3>
+      <p className="mt-2 text-xs text-slate-400 max-w-sm leading-relaxed">{message}</p>
       {actionHref && (
         <Link href={actionHref} className="mt-6">
-          <Button variant="primary">{actionText}</Button>
+          <Button variant="primary" size="sm">{actionText}</Button>
         </Link>
       )}
     </div>

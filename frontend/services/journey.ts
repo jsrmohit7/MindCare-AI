@@ -7,7 +7,7 @@ export interface JourneyEvent {
   event_type: "assessment" | "checkin" | "coach" | "journal" | "goal" | "achievement" | "review";
   title: string;
   description: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   timestamp: string;
 }
 

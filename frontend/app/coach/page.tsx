@@ -28,7 +28,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-
 // Simple custom Markdown rendering function
 function parseMarkdown(text: string) {
   const paragraphs = text.split(/\n\n+/);
@@ -70,7 +69,6 @@ function renderInline(text: string) {
 }
 
 export default function CoachPage() {
-  
   // Navigation & UI States
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -110,7 +108,6 @@ export default function CoachPage() {
     loadWellnessDashboardContext();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
 
   // Auto scroll chat to bottom when messages change
   useEffect(() => {
@@ -320,11 +317,11 @@ export default function CoachPage() {
 
   // Suggested Actions below responses
   const suggestedActions = [
-    { label: "🧘 Breathing Exercise", action: startBreathing },
-    { label: "📝 Daily Check-In", link: "/daily-checkin" },
-    { label: "📈 View Progress", link: "/dashboard" },
-    { label: "👨‍⚕️ Find Professionals", link: "/consult" },
-    { label: "🧠 Take Assessment", link: "/assessment" }
+    { label: "🧘 Breathe", action: startBreathing },
+    { label: "📝 Check-In", link: "/daily-checkin" },
+    { label: "📈 Progress", link: "/dashboard" },
+    { label: "👨‍⚕️ Support", link: "/consult" },
+    { label: "🧠 Screening", link: "/assessment" }
   ];
 
   // Latest Assessment info
@@ -332,25 +329,25 @@ export default function CoachPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto h-[calc(100vh-8rem)] flex rounded-3xl border border-white/10 bg-slate-900/40 overflow-hidden shadow-2xl backdrop-blur-xl relative">
+      <div className="max-w-7xl mx-auto h-[calc(100vh-6rem)] flex rounded-3xl border border-white/[0.05] bg-slate-900/20 overflow-hidden shadow-2xl backdrop-blur-2xl relative">
         
-        {/* ——— 1. Sidebar Panel ——— */}
+        {/* ——— 1. Sidebar Panel (Left) ——— */}
         <div
           className={`
-            ${sidebarOpen ? "w-80 border-r border-white/10" : "w-0 overflow-hidden border-r-0"}
-            shrink-0 flex flex-col bg-slate-950/40 transition-all duration-300 ease-in-out relative z-20
+            ${sidebarOpen ? "w-80 border-r border-white/[0.05]" : "w-0 overflow-hidden border-r-0"}
+            shrink-0 flex flex-col bg-slate-950/20 transition-all duration-300 ease-in-out relative z-20
             md:relative md:block
             ${sidebarOpen ? "absolute md:static inset-y-0 left-0 bg-slate-900 md:bg-transparent" : "hidden md:hidden"}
           `}
         >
           {/* Sidebar Header */}
-          <div className="p-4 border-b border-white/5 flex items-center justify-between">
-            <h2 className="text-sm font-black text-white flex items-center gap-2">
+          <div className="p-4 border-b border-white/[0.04] flex items-center justify-between">
+            <h2 className="text-xs font-bold text-slate-200 flex items-center gap-2 uppercase tracking-wider">
               🤖 Conversations
             </h2>
             <button
               onClick={handleStartNewChat}
-              className="p-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="p-1.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 active:scale-95"
               title="Start New Chat"
               aria-label="Start new chat"
             >
@@ -359,7 +356,7 @@ export default function CoachPage() {
           </div>
 
           {/* Search bar */}
-          <div className="p-3 border-b border-white/5">
+          <div className="p-3 border-b border-white/[0.04]">
             <div className="relative">
               <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-500" />
               <input
@@ -367,18 +364,18 @@ export default function CoachPage() {
                 placeholder="Search chats..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950/50 border border-white/5 rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/50"
+                className="w-full bg-slate-950/60 border border-white/[0.04] rounded-xl pl-9 pr-4 py-2 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500/30"
                 aria-label="Search conversations"
               />
             </div>
           </div>
 
           {/* Chats list */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-1 no-scrollbar">
             {loadingConvs ? (
-              <div className="py-8 text-center text-xs text-slate-500">Loading chats...</div>
+              <div className="py-8 text-center text-xs text-slate-500 font-semibold">Loading chats...</div>
             ) : filteredConversations.length === 0 ? (
-              <div className="py-8 text-center text-xs text-slate-500">No chats found.</div>
+              <div className="py-8 text-center text-xs text-slate-500 font-medium">No chats found.</div>
             ) : (
               filteredConversations.map((c) => {
                 const active = selectedConvId === c._id;
@@ -390,8 +387,8 @@ export default function CoachPage() {
                     className={`
                       group relative flex items-center justify-between p-3 rounded-xl cursor-pointer transition-all duration-200 border
                       ${active
-                        ? "bg-indigo-600/20 border-indigo-500/30 text-white"
-                        : "bg-transparent border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200"
+                        ? "bg-indigo-600/10 border-indigo-500/10 text-white"
+                        : "bg-transparent border-transparent text-slate-400 hover:bg-white/[0.02] hover:text-slate-200"
                       }
                     `}
                     role="button"
@@ -414,14 +411,14 @@ export default function CoachPage() {
                             if (e.key === "Enter") handleRename(c._id);
                             if (e.key === "Escape") setRenameId(null);
                           }}
-                          className="w-full bg-slate-950 border border-white/10 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                          className="w-full bg-slate-950 border border-white/[0.08] rounded-lg px-2 py-1 text-xs text-white focus:outline-none"
                           autoFocus
                           onClick={(e) => e.stopPropagation()}
                         />
                       ) : (
                         <p className="text-xs font-bold truncate">{c.title}</p>
                       )}
-                      <p className="text-[10px] text-slate-500 truncate mt-0.5">
+                      <p className="text-[10px] text-slate-500 truncate mt-1">
                         {c.messages.length > 0
                           ? c.messages[c.messages.length - 1].content
                           : "Empty conversation"}
@@ -430,21 +427,21 @@ export default function CoachPage() {
 
                     {/* Rename/Delete actions */}
                     {!renaming && (
-                      <div className="absolute right-2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="absolute right-2.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             setRenameId(c._id);
                             setRenameTitle(c.title);
                           }}
-                          className="p-1 rounded hover:bg-white/10 text-slate-400 hover:text-white"
+                          className="p-1 rounded-lg hover:bg-white/[0.05] text-slate-500 hover:text-slate-200"
                           title="Rename"
                         >
                           <Edit2 className="h-3 w-3" />
                         </button>
                         <button
                           onClick={(e) => handleDelete(c._id, e)}
-                          className="p-1 rounded hover:bg-rose-500/20 text-slate-400 hover:text-rose-400"
+                          className="p-1 rounded-lg hover:bg-rose-500/10 text-slate-500 hover:text-rose-400"
                           title="Delete"
                         >
                           <Trash2 className="h-3 w-3" />
@@ -462,36 +459,36 @@ export default function CoachPage() {
         <div className="flex-1 flex flex-col bg-transparent relative z-10">
           
           {/* Chat Header */}
-          <div className="p-4 border-b border-white/10 flex items-center justify-between bg-slate-950/20">
+          <div className="p-4 border-b border-white/[0.05] flex items-center justify-between bg-slate-950/10">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-1.5 rounded-xl hover:bg-white/5 text-slate-400 hover:text-white"
+                className="p-1.5 rounded-xl hover:bg-white/[0.04] text-slate-400 hover:text-slate-200"
                 aria-label="Toggle sidebar"
               >
-                {sidebarOpen ? <ChevronLeft className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                {sidebarOpen ? <ChevronLeft className="h-4.5 w-4.5" /> : <ChevronRight className="h-4.5 w-4.5" />}
               </button>
               <div>
-                <h1 className="text-sm font-black text-white flex items-center gap-1.5">
-                  🤖 MindCare AI Wellness Coach
+                <h1 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                  🤖 AI Wellness Companion
                 </h1>
-                <p className="text-[10px] text-slate-500">Empathic feedback powered by IBM watsonx.ai Granite</p>
+                <p className="text-[10px] text-slate-500 mt-0.5">Reflective support driven by Watsonx Granite AI</p>
               </div>
             </div>
           </div>
 
           {/* Messages stream */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4 no-scrollbar">
+          <div className="flex-1 overflow-y-auto p-5 space-y-5 no-scrollbar">
             
             {/* Welcome System Message */}
-            <div className="flex gap-3">
-              <div className="h-8 w-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center shrink-0">
-                <Bot className="h-4 w-4 text-indigo-400" />
+            <div className="flex gap-4">
+              <div className="h-8.5 w-8.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+                <Bot className="h-4.5 w-4.5 text-indigo-400" />
               </div>
-              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 max-w-[85%] text-xs space-y-2">
-                <p className="font-bold text-white">Hi! I&apos;m your AI Wellness Coach.</p>
-                <p className="text-slate-300">I&apos;m here to help you reflect on your wellness journey, understand your progress, and support healthy habits.</p>
-                <p className="text-slate-300">How are you feeling today?</p>
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4.5 max-w-[85%] text-xs space-y-2 leading-relaxed">
+                <p className="font-bold text-white">Hello, I&apos;m your AI Wellness Companion.</p>
+                <p className="text-slate-300">I am connected to your wellness trends, journal records, and clinical scores to offer contextual guidance.</p>
+                <p className="text-slate-300">How are you holding up today?</p>
               </div>
             </div>
 
@@ -499,12 +496,12 @@ export default function CoachPage() {
             {messages.map((m, idx) => {
               const isUser = m.role === "user";
               return (
-                <div key={idx} className={`flex gap-3 ${isUser ? "flex-row-reverse" : ""}`}>
+                <div key={idx} className={`flex gap-4 ${isUser ? "flex-row-reverse" : ""}`}>
                   <div
                     className={`
-                      h-8 w-8 rounded-lg flex items-center justify-center shrink-0 border
+                      h-8.5 w-8.5 rounded-xl flex items-center justify-center shrink-0 border
                       ${isUser
-                        ? "bg-pink-500/10 border-pink-500/20 text-pink-400"
+                        ? "bg-purple-600/10 border-purple-500/20 text-purple-400"
                         : "bg-indigo-600/10 border-indigo-500/20 text-indigo-400"
                       }
                     `}
@@ -512,26 +509,26 @@ export default function CoachPage() {
                     {isUser ? <Smile className="h-4 w-4" /> : <Bot className="h-4 w-4" />}
                   </div>
 
-                  <div className="space-y-1.5 max-w-[85%]">
+                  <div className="space-y-2 max-w-[80%]">
                     <div
                       className={`
-                        border rounded-2xl p-4 text-xs shadow-md relative group/msg
+                        border rounded-2xl p-4 text-xs leading-relaxed shadow-sm relative group/msg
                         ${isUser
-                          ? "bg-pink-600/10 border-pink-500/20 text-pink-100"
-                          : "bg-white/5 border-white/5 text-slate-200"
+                          ? "bg-purple-600/5 border-purple-500/10 text-purple-100"
+                          : "bg-white/[0.02] border-white/[0.04] text-slate-200"
                         }
                       `}
                     >
-                      {/* Markdown Parsed Message Body */}
-                      <div className="space-y-1.5 prose prose-invert">
+                      {/* Message Body */}
+                      <div className="space-y-2 prose prose-invert">
                         {parseMarkdown(m.content)}
                       </div>
 
                       {/* Toolbars for messages */}
-                      <div className="absolute right-2 bottom-1 flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
+                      <div className="absolute right-2 bottom-2 flex items-center gap-1 opacity-0 group-hover/msg:opacity-100 transition-opacity">
                         <button
                           onClick={() => handleCopyText(m.content, idx)}
-                          className="p-1 rounded bg-slate-950/40 hover:bg-slate-900 text-slate-400 hover:text-white"
+                          className="p-1 rounded-lg bg-slate-950/60 hover:bg-slate-900 text-slate-400 hover:text-white"
                           title="Copy text"
                         >
                           {copiedId === idx ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
@@ -541,7 +538,7 @@ export default function CoachPage() {
                           <>
                             <button
                               onClick={() => setMessageFeedback((prev) => ({ ...prev, [idx]: "like" }))}
-                              className={`p-1 rounded bg-slate-950/40 hover:bg-slate-900 ${
+                              className={`p-1 rounded-lg bg-slate-950/60 hover:bg-slate-900 ${
                                 messageFeedback[idx] === "like" ? "text-indigo-400" : "text-slate-400 hover:text-white"
                               }`}
                               title="Helpful"
@@ -550,7 +547,7 @@ export default function CoachPage() {
                             </button>
                             <button
                               onClick={() => setMessageFeedback((prev) => ({ ...prev, [idx]: "dislike" }))}
-                              className={`p-1 rounded bg-slate-950/40 hover:bg-slate-900 ${
+                              className={`p-1 rounded-lg bg-slate-950/60 hover:bg-slate-900 ${
                                 messageFeedback[idx] === "dislike" ? "text-rose-400" : "text-slate-400 hover:text-white"
                               }`}
                               title="Not helpful"
@@ -562,7 +559,7 @@ export default function CoachPage() {
                       </div>
                     </div>
 
-                    {/* Suggested actions below AI responses */}
+                    {/* Suggested actions */}
                     {!isUser && idx === messages.length - 1 && (
                       <div className="flex flex-wrap gap-1.5 pt-1">
                         {suggestedActions.map((act) =>
@@ -570,7 +567,7 @@ export default function CoachPage() {
                             <Link
                               key={act.label}
                               href={act.link}
-                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-indigo-500/20 transition-all"
+                              className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.04] hover:border-indigo-500/25 transition-all"
                             >
                               {act.label}
                             </Link>
@@ -578,7 +575,7 @@ export default function CoachPage() {
                             <button
                               key={act.label}
                               onClick={act.action}
-                              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 hover:border-indigo-500/20 transition-all"
+                              className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.04] hover:border-indigo-500/25 transition-all"
                             >
                               {act.label}
                             </button>
@@ -586,7 +583,7 @@ export default function CoachPage() {
                         )}
                         <button
                           onClick={handleRegenerate}
-                          className="text-[10px] font-bold px-2 py-1 rounded-lg bg-white/5 border border-white/5 text-slate-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-1"
+                          className="text-[9px] font-bold px-2.5 py-1 rounded-full bg-white/[0.02] border border-white/[0.04] text-slate-400 hover:text-white hover:bg-white/[0.04] transition-all flex items-center gap-1"
                           title="Regenerate response"
                         >
                           <RotateCw className="h-2.5 w-2.5" />
@@ -596,7 +593,7 @@ export default function CoachPage() {
                     )}
 
                     {/* Timestamp */}
-                    <div className="text-[9px] text-slate-600 px-1">
+                    <div className="text-[8px] text-slate-600 px-1 font-semibold">
                       {new Date(m.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                     </div>
                   </div>
@@ -604,18 +601,18 @@ export default function CoachPage() {
               );
             })}
 
-            {/* Typing indicator */}
+            {/* Thinking indicator */}
             {sending && (
-              <div className="flex gap-3">
-                <div className="h-8 w-8 rounded-lg bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0">
+              <div className="flex gap-4">
+                <div className="h-8.5 w-8.5 rounded-xl bg-indigo-600/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 animate-pulse">
                   <Bot className="h-4 w-4" />
                 </div>
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-4 max-w-[85%] text-xs flex items-center space-x-2">
-                  <span className="text-slate-400">Coach is thinking</span>
+                <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4 max-w-[85%] text-xs flex items-center space-x-2">
+                  <span className="text-slate-500 font-semibold">Coach is formulating response</span>
                   <div className="flex space-x-1">
-                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
-                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
-                    <span className="h-1.5 w-1.5 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                    <span className="h-1 w-1 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                    <span className="h-1 w-1 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1 w-1 bg-indigo-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
                   </div>
                 </div>
               </div>
@@ -626,20 +623,19 @@ export default function CoachPage() {
 
           {/* Suggested prompts list */}
           {messages.length <= 1 && (
-            <div className="px-4 py-2 border-t border-white/5 bg-slate-950/10 space-y-1.5">
-              <p className="text-[10px] text-slate-500 uppercase font-black tracking-wider">Suggested prompts</p>
-              <div className="flex flex-wrap gap-1.5">
+            <div className="px-5 py-3 border-t border-white/[0.04] bg-slate-950/10 space-y-2">
+              <p className="text-[8px] text-slate-500 uppercase font-bold tracking-wider">Suggested Focus Prompts</p>
+              <div className="flex flex-wrap gap-2">
                 {[
-                  "I'm feeling stressed",
-                  "Help me relax",
-                  "Explain my assessment",
-                  "How has my mood changed?",
-                  "Give me today's wellness tips",
+                  "I'm feeling stress and anxiety today",
+                  "Suggest some relaxation habits",
+                  "Break down my latest assessment results",
+                  "Show me my wellness score trends",
                 ].map((prompt) => (
                   <button
                     key={prompt}
                     onClick={() => handleSendMessage(prompt)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-slate-900 border border-white/5 text-slate-400 hover:text-white hover:border-indigo-500/30 transition-all text-left"
+                    className="text-xs px-3.5 py-1.5 rounded-full bg-slate-950/40 border border-white/[0.04] text-slate-400 hover:text-white hover:border-indigo-500/25 transition-all text-left font-medium"
                   >
                     • {prompt}
                   </button>
@@ -649,7 +645,7 @@ export default function CoachPage() {
           )}
 
           {/* Input text controls */}
-          <div className="p-4 border-t border-white/10 bg-slate-950/20">
+          <div className="p-4 border-t border-white/[0.05] bg-slate-950/10">
             <div className="flex gap-3 items-end">
               <textarea
                 ref={inputRef}
@@ -663,13 +659,13 @@ export default function CoachPage() {
                   }
                 }}
                 placeholder="Message your wellness coach..."
-                className="flex-1 bg-slate-950/60 border border-white/10 rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 resize-none focus:outline-none focus:border-indigo-500/50 max-h-36 no-scrollbar"
+                className="flex-1 bg-slate-950/60 border border-white/[0.08] rounded-2xl px-4 py-3 text-xs text-white placeholder-slate-500 resize-none focus:outline-none focus:border-indigo-500/30 max-h-36 no-scrollbar"
                 aria-label="Type a message"
               />
               <button
                 onClick={() => handleSendMessage()}
                 disabled={!inputMessage.trim() || sending}
-                className="p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0"
+                className="p-3 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500 shrink-0 active:scale-95"
                 aria-label="Send message"
               >
                 <Send className="h-4 w-4" />
@@ -678,40 +674,40 @@ export default function CoachPage() {
           </div>
         </div>
 
-        {/* ——— 3. Context & Insights panel (Right Side) ——— */}
-        <div className="hidden lg:flex w-72 border-l border-white/10 flex-col bg-slate-950/40 p-4 space-y-4 overflow-y-auto no-scrollbar shrink-0">
-          <h3 className="text-xs font-black text-white border-b border-white/5 pb-2 flex items-center gap-1.5 uppercase tracking-wider">
+        {/* ——— 3. Context & Insights Panel (Right Side) ——— */}
+        <div className="hidden lg:flex w-76 border-l border-white/[0.05] flex-col bg-slate-950/20 p-4 space-y-4 overflow-y-auto no-scrollbar shrink-0">
+          <h3 className="text-[10px] font-bold text-slate-200 border-b border-white/[0.04] pb-2.5 flex items-center gap-2 uppercase tracking-wider">
             <Sparkles className="h-4 w-4 text-indigo-400" />
-            AI Coach Insights
+            Active Context
           </h3>
 
           {loadingContext ? (
-            <div className="py-8 text-center text-xs text-slate-500">Loading context...</div>
+            <div className="py-8 text-center text-xs text-slate-500 font-semibold">Loading stats...</div>
           ) : (
             <div className="space-y-4 text-xs">
               
               {/* Wellness Score Gauge */}
-              <div className="bg-white/5 border border-white/5 rounded-2xl p-4 flex flex-col items-center justify-center space-y-2 text-center shadow-inner">
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Wellness score</span>
-                <div className="relative flex h-20 w-20 items-center justify-center rounded-full border-2 border-white/5 bg-slate-950 shadow-inner">
-                  <div className="absolute inset-0 rounded-full border-2 border-indigo-500/30 animate-pulse" />
-                  <span className="text-xl font-black text-indigo-300">
-                    {todayRecord ? todayRecord.wellness_score : "N/A"}
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4 flex flex-col items-center justify-center space-y-3 text-center shadow-inner relative overflow-hidden">
+                <div className="absolute top-0 right-0 h-16 w-16 bg-indigo-500/5 blur-2xl rounded-full" />
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Wellness score</span>
+                <div className="relative flex h-18 w-18 items-center justify-center rounded-2xl border border-white/[0.04] bg-slate-950/60 shadow-inner">
+                  <span className="text-lg font-black text-indigo-400">
+                    {todayRecord ? todayRecord.wellness_score : "—"}
                   </span>
                 </div>
-                <span className="text-[9px] text-slate-500 mt-1 font-semibold">Today&apos;s wellness index</span>
+                <span className="text-[9px] text-slate-500 font-semibold">Calculated today</span>
               </div>
 
               {/* Stats parameters */}
-              <div className="bg-white/5 border border-white/5 rounded-2xl p-3.5 space-y-2.5">
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4 space-y-3">
                 {[
-                  { icon: <Smile className="h-4 w-4 text-indigo-400" />, label: "Mood", value: todayRecord ? todayRecord.mood : "No check-in" },
-                  { icon: <Activity className="h-4 w-4 text-pink-400" />, label: "Stress level", value: todayRecord ? `${todayRecord.stress}/10` : "No check-in" },
-                  { icon: <Clock className="h-4 w-4 text-blue-400" />, label: "Sleep duration", value: todayRecord ? todayRecord.sleep : "No check-in" },
-                  { icon: <Flame className="h-4 w-4 text-amber-500" />, label: "Current streak", value: `${streak.current_streak} days` },
+                  { icon: <Smile className="h-4 w-4 text-indigo-400" />, label: "Mood", value: todayRecord ? todayRecord.mood : "Not logged" },
+                  { icon: <Activity className="h-4 w-4 text-pink-400" />, label: "Stress", value: todayRecord ? `${todayRecord.stress}/10` : "Not logged" },
+                  { icon: <Clock className="h-4 w-4 text-blue-400" />, label: "Sleep", value: todayRecord ? todayRecord.sleep : "Not logged" },
+                  { icon: <Flame className="h-4 w-4 text-amber-500" />, label: "Streak", value: `${streak.current_streak} days` },
                 ].map(({ icon, label, value }) => (
                   <div key={label} className="flex items-center justify-between">
-                    <span className="text-slate-500 font-semibold flex items-center gap-1.5">
+                    <span className="text-slate-500 font-semibold flex items-center gap-2">
                       {icon}
                       {label}
                     </span>
@@ -721,35 +717,32 @@ export default function CoachPage() {
               </div>
 
               {/* Latest Assessment score */}
-              <div className="bg-white/5 border border-white/5 rounded-2xl p-3.5 space-y-2.5">
-                <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider block">Latest Assessment</span>
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4 space-y-3">
+                <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider block">Clinical score</span>
                 {loadingAssessments ? (
-                  <div className="h-8 animate-pulse bg-white/5 rounded-lg" />
+                  <div className="h-10 animate-pulse bg-white/[0.02] rounded-xl" />
                 ) : latestAssessment ? (
-                  <div className="space-y-1.5">
+                  <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Risk Level</span>
-                      <span className="font-bold text-indigo-300">{latestAssessment.risk_profile?.overall_risk?.level}</span>
+                      <span className="text-slate-500">Risk Profile</span>
+                      <span className="font-bold text-indigo-400">{latestAssessment.risk_profile?.overall_risk?.level}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-slate-500">Clinical Score</span>
+                      <span className="text-slate-500">PHQ-9 / GAD-7</span>
                       <span className="font-bold text-slate-300">
                         {Math.round(latestAssessment.risk_profile?.overall_risk?.score ?? 0)}/100
                       </span>
                     </div>
-                    <div className="text-[9px] text-slate-500 mt-1">
-                      Evaluated on {latestAssessment.metadata?.generated_at?.split("T")[0]}
-                    </div>
                   </div>
                 ) : (
-                  <div className="text-slate-500">No assessments completed.</div>
+                  <div className="text-slate-500">No assessments compiled.</div>
                 )}
               </div>
 
               {/* Today's Goal */}
               {todayRecord?.daily_goal && (
-                <div className="bg-indigo-950/20 border border-indigo-500/10 rounded-2xl p-3.5 space-y-1.5">
-                  <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider block">🎯 Daily Goal</span>
+                <div className="bg-indigo-950/10 border border-indigo-500/10 rounded-2xl p-4 space-y-1.5">
+                  <span className="text-[9px] text-indigo-400 font-bold uppercase tracking-wider block">🎯 Focus Goal</span>
                   <p className="text-slate-300 leading-relaxed italic">&ldquo;{todayRecord.daily_goal}&rdquo;</p>
                 </div>
               )}
@@ -763,12 +756,12 @@ export default function CoachPage() {
       {/* ——— 4. Breathing Exercise Modal ——— */}
       {breathingOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md">
-          <div className="w-full max-w-sm rounded-3xl border border-white/10 bg-slate-900 p-6 text-center space-y-6 shadow-2xl relative overflow-hidden">
+          <div className="w-full max-w-sm rounded-3xl border border-white/[0.08] bg-slate-900 p-6 text-center space-y-6 shadow-2xl relative overflow-hidden">
             
             {/* Close button */}
             <button
               onClick={() => setBreathingOpen(false)}
-              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/5 text-slate-400 hover:text-white"
+              className="absolute top-4 right-4 p-1 rounded-full hover:bg-white/[0.05] text-slate-400 hover:text-white"
               aria-label="Close breathing exercise"
             >
               <X className="h-5 w-5" />
@@ -779,16 +772,16 @@ export default function CoachPage() {
               <div
                 className={`
                   rounded-full bg-indigo-500 blur-2xl transition-all duration-1000
-                  ${breathingPhase === "inhale" ? "h-64 w-64 scale-110 bg-pink-500" : ""}
-                  ${breathingPhase === "hold" ? "h-56 w-56 scale-100 bg-indigo-500" : ""}
+                  ${breathingPhase === "inhale" ? "h-64 w-64 scale-110 bg-indigo-500" : ""}
+                  ${breathingPhase === "hold" ? "h-56 w-56 scale-100 bg-indigo-600" : ""}
                   ${breathingPhase === "exhale" ? "h-40 w-40 scale-75 bg-blue-500" : ""}
                 `}
               />
             </div>
 
             <div className="space-y-1 relative z-10">
-              <h3 className="text-lg font-black text-white">4-4-4 Relaxing Breath</h3>
-              <p className="text-xs text-slate-500">Pace your breath with the expanding aura</p>
+              <h3 className="text-base font-extrabold text-white">4-4-4 Box Breathing</h3>
+              <p className="text-xs text-slate-500">Sync your breath with the glowing portal</p>
             </div>
 
             {/* Expanding visual breathing circle */}
@@ -796,18 +789,18 @@ export default function CoachPage() {
               <div
                 className={`
                   h-32 w-32 rounded-full border-4 flex items-center justify-center bg-slate-950/80 shadow-2xl transition-all duration-[4000ms] ease-in-out
-                  ${breathingPhase === "inhale" ? "scale-125 border-pink-500 shadow-pink-500/20" : ""}
-                  ${breathingPhase === "hold" ? "scale-120 border-indigo-500 shadow-indigo-500/20" : ""}
-                  ${breathingPhase === "exhale" ? "scale-90 border-blue-500 shadow-blue-500/20" : ""}
+                  ${breathingPhase === "inhale" ? "scale-125 border-indigo-400 shadow-indigo-500/20" : ""}
+                  ${breathingPhase === "hold" ? "scale-120 border-violet-400 shadow-violet-500/20" : ""}
+                  ${breathingPhase === "exhale" ? "scale-90 border-blue-400 shadow-blue-500/20" : ""}
                 `}
               >
                 <div className="text-center">
-                  <p className="text-sm font-black text-white uppercase tracking-wider">
-                    {breathingPhase === "inhale" && "Breathe In"}
+                  <p className="text-[10px] font-bold text-white uppercase tracking-widest">
+                    {breathingPhase === "inhale" && "Inhale"}
                     {breathingPhase === "hold" && "Hold"}
-                    {breathingPhase === "exhale" && "Breathe Out"}
+                    {breathingPhase === "exhale" && "Exhale"}
                   </p>
-                  <p className="text-2xl font-black text-indigo-400 mt-1">{breathingSeconds}</p>
+                  <p className="text-2xl font-black text-indigo-300 mt-1">{breathingSeconds}</p>
                 </div>
               </div>
             </div>
@@ -815,7 +808,7 @@ export default function CoachPage() {
             <div className="pt-2 relative z-10">
               <button
                 onClick={() => setBreathingOpen(false)}
-                className="w-full rounded-2xl bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-200 py-3 transition-all border border-white/5"
+                className="w-full rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-slate-200 py-3 transition-all border border-white/[0.05]"
               >
                 End Exercise
               </button>

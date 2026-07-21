@@ -2,8 +2,43 @@
 
 import React, { useState, useEffect } from "react";
 import { goalsService, WellnessGoal } from "@/services/goals";
-import { Plus, Check, Trash2, Sparkles, Award, Target, Flame } from "lucide-react";
+import { Plus, Check, Trash2, Sparkles, Award, Target, Flame, Loader2 } from "lucide-react";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import Card from "@/components/Card";
+import Button from "@/components/Button";
 
+// ─── Goal type → color mapping ───────────────────────────────────────────────
+const TYPE_ACCENTS: Record<string, string> = {
+  sleep: "text-blue-400 bg-blue-500/10 border-blue-500/20",
+  exercise: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
+  meditation: "text-violet-400 bg-violet-500/10 border-violet-500/20",
+  hydration: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
+  mood: "text-rose-400 bg-rose-500/10 border-rose-500/20",
+  custom: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+};
+
+const FREQ_COLORS: Record<string, string> = {
+  daily: "text-amber-400 bg-amber-500/10 border-amber-500/20",
+  weekly: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
+};
+
+function TypeBadge({ type }: { type: string }) {
+  const cls = TYPE_ACCENTS[type] ?? TYPE_ACCENTS.custom;
+  return (
+    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${cls} tracking-wider`}>
+      {type}
+    </span>
+  );
+}
+
+function FreqBadge({ freq }: { freq: string }) {
+  const cls = FREQ_COLORS[freq] ?? FREQ_COLORS.daily;
+  return (
+    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${cls} tracking-wider`}>
+      {freq}
+    </span>
+  );
+}
 
 export default function GoalsPage() {
   const [goals, setGoals] = useState<WellnessGoal[]>([]);
@@ -70,8 +105,7 @@ export default function GoalsPage() {
         suggested.frequency,
         true
       );
-      // Remove from suggested list to avoid duplicate additions
-      setSuggestedGoals(suggestedGoals.filter(s => s.title !== suggested.title));
+      setSuggestedGoals(suggestedGoals.filter((s) => s.title !== suggested.title));
       await loadGoals();
     } catch (err) {
       console.error("Failed to adopt suggested goal:", err);
@@ -97,70 +131,88 @@ export default function GoalsPage() {
     }
   };
 
-  const activeGoals = goals.filter(g => g.status === "active");
-  const completedGoals = goals.filter(g => g.status === "completed");
+  const activeGoals = goals.filter((g) => g.status === "active");
+  const completedGoals = goals.filter((g) => g.status === "completed");
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 text-slate-100 p-6 md:p-12">
-      <div className="max-w-6xl mx-auto space-y-8">
-        
+    <ProtectedRoute>
+      <div className="max-w-6xl mx-auto py-6 space-y-8">
+
         {/* Header */}
-        <header>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-            🎯 Wellness Goals
+        <div className="space-y-1.5 border-b border-white/[0.04] pb-6">
+          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
+            <Target className="h-6 w-6 text-rose-400" aria-hidden="true" />
+            Wellness Goals
           </h1>
-          <p className="text-slate-400 text-sm mt-1">
-            Build healthy daily streaks, complete objectives, and get habit recommendations.
-          </p>
-        </header>
+          <p className="text-xs text-slate-400 leading-relaxed">Build healthy habits, complete milestones, and adopt Watsonx AI suggested objectives.</p>
+        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* Left Column: Form & Suggestions */}
-          <section className="lg:col-span-5 space-y-8">
-            
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-6">
+          {[
+            { label: "Active", value: activeGoals.length, color: "text-indigo-400" },
+            { label: "Completed", value: completedGoals.length, color: "text-emerald-400" },
+            { label: "AI Suggestions", value: suggestedGoals.length, color: "text-purple-400" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-slate-900/40 border border-white/[0.05] rounded-3xl p-5 text-center shadow-inner relative overflow-hidden">
+              <div className="absolute top-0 right-0 h-16 w-16 bg-white/[0.01] blur-2xl rounded-full" />
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
+              <p className={`text-2xl font-black mt-1.5 ${color}`}>{loading ? "—" : value}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+          {/* Left: Form + AI Suggestions */}
+          <div className="lg:col-span-4 space-y-6">
+
             {/* Create Goal Form */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl space-y-4">
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Target className="h-5 w-5 text-indigo-400" />
-                Set New Goal
+            <Card className="space-y-4">
+              <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider border-b border-white/[0.04] pb-3">
+                <Plus className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+                New Goal
               </h2>
-
-              <form onSubmit={handleCreate} className="space-y-4 text-xs">
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Goal Title</label>
+              <form onSubmit={handleCreate} className="space-y-3.5 text-xs">
+                <div className="space-y-2">
+                  <label htmlFor="goal-title" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Title
+                  </label>
                   <input
+                    id="goal-title"
                     type="text"
-                    placeholder="e.g. Morning meditation, 7 hours sleep..."
+                    placeholder="e.g. 7 hours sleep, morning walk…"
                     value={title}
                     onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-slate-950/40 border border-white/5 rounded-xl p-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Goal Type</label>
+                <div className="grid grid-cols-2 gap-3.5">
+                  <div className="space-y-2">
+                    <label htmlFor="goal-type" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Type
+                    </label>
                     <select
+                      id="goal-type"
                       value={type}
                       onChange={(e) => setType(e.target.value)}
-                      className="w-full bg-slate-950/40 border border-white/5 rounded-xl p-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
-                      <option value="sleep">Sleep</option>
-                      <option value="exercise">Exercise</option>
-                      <option value="meditation">Meditation</option>
-                      <option value="hydration">Hydration</option>
-                      <option value="mood">Mood</option>
-                      <option value="custom">Custom</option>
+                      {["sleep", "exercise", "meditation", "hydration", "mood", "custom"].map((t) => (
+                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                      ))}
                     </select>
                   </div>
-
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Frequency</label>
+                  <div className="space-y-2">
+                    <label htmlFor="goal-freq" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Frequency
+                    </label>
                     <select
+                      id="goal-freq"
                       value={frequency}
                       onChange={(e) => setFrequency(e.target.value)}
-                      className="w-full bg-slate-950/40 border border-white/5 rounded-xl p-3 text-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                      className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                     >
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly</option>
@@ -168,115 +220,134 @@ export default function GoalsPage() {
                   </div>
                 </div>
 
-                <div className="space-y-1">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Target Metric (hours, times, water liters)</label>
+                <div className="space-y-2">
+                  <label htmlFor="goal-target" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                    Target <span className="font-medium normal-case text-slate-600">(hours, times, litres)</span>
+                  </label>
                   <input
+                    id="goal-target"
                     type="number"
                     step="0.1"
                     min="0.1"
                     value={targetValue}
                     onChange={(e) => setTargetValue(parseFloat(e.target.value))}
-                    className="w-full bg-slate-950/40 border border-white/5 rounded-xl p-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                    className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
                   />
                 </div>
 
-                <button
+                <Button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 text-white font-bold text-xs p-3 rounded-xl transition-all shadow-lg shadow-indigo-500/20"
+                  disabled={submitting || !title.trim()}
+                  variant="primary"
+                  className="w-full justify-center active:scale-[0.98] border border-indigo-500/30 mt-2"
+                  size="sm"
                 >
-                  <Plus className="h-4 w-4" />
-                  {submitting ? "Creating..." : "Create Goal"}
-                </button>
+                  {submitting ? (
+                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…</>
+                  ) : (
+                    <><Plus className="h-3.5 w-3.5" /> Create Goal</>
+                  )}
+                </Button>
               </form>
-            </div>
+            </Card>
 
-            {/* AI Recommendations */}
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-xl shadow-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg font-bold flex items-center gap-2 text-indigo-300">
-                  <Sparkles className="h-5 w-5 text-indigo-400 animate-pulse" />
-                  AI Suggested Goals
+            {/* AI Suggested Goals */}
+            <Card className="space-y-4">
+              <div className="flex items-center justify-between border-b border-white/[0.04] pb-3">
+                <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
+                  <Sparkles className="h-4 w-4 text-violet-400" aria-hidden="true" />
+                  AI Suggestions
                 </h2>
-                <span className="text-[9px] bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20 text-indigo-300 font-bold uppercase tracking-wider">
-                  Explainable
+                <span className="text-[9px] font-bold uppercase text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full tracking-wider">
+                  Smart
                 </span>
               </div>
 
               {loadingSuggestions ? (
-                <div className="text-slate-500 text-xs text-center py-6">Analyzing wellness trends...</div>
+                <div className="space-y-2">
+                  {[1, 2].map((i) => <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />)}
+                </div>
               ) : suggestedGoals.length === 0 ? (
-                <div className="text-slate-500 text-xs text-center py-6">Your current stats are optimized. Log check-ins to unlock recommendations.</div>
+                <p className="text-xs text-slate-500 text-center py-6 leading-relaxed">
+                  Your stats look great! Log more check-ins to unlock personalized recommendations.
+                </p>
               ) : (
                 <div className="space-y-3">
                   {suggestedGoals.map((suggested, index) => (
-                    <div key={index} className="bg-slate-950/40 border border-white/5 p-3 rounded-xl space-y-2 text-xs text-left">
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200">{suggested.title}</span>
-                        <span className="text-[9px] text-slate-500 capitalize">{suggested.type}</span>
+                    <div key={index} className="bg-slate-950/40 border border-white/[0.04] p-3.5 rounded-2xl space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <p className="text-xs font-bold text-slate-200">{suggested.title}</p>
+                        <TypeBadge type={suggested.type} />
                       </div>
-                      <p className="text-[11px] text-slate-400 italic leading-relaxed">
-                        &ldquo;{suggested.reason}&rdquo;
-                      </p>
+                      {suggested.reason && (
+                        <p className="text-[11px] text-slate-500 leading-relaxed italic">&ldquo;{suggested.reason}&rdquo;</p>
+                      )}
                       <button
                         onClick={() => handleAdoptSuggested(suggested)}
-                        className="w-full inline-flex items-center justify-center gap-1.5 bg-white/5 hover:bg-indigo-600 hover:text-white border border-white/10 text-slate-300 font-bold text-[10px] py-1.5 rounded-lg transition-all"
+                        className="w-full flex items-center justify-center gap-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 font-bold text-[10px] py-2 rounded-xl transition-all"
                       >
-                        <Check className="h-3.5 w-3.5" />
-                        Adopt Goal
+                        <Check className="h-3.5 w-3.5" /> Adopt Goal
                       </button>
                     </div>
                   ))}
                 </div>
               )}
-            </div>
+            </Card>
+          </div>
 
-          </section>
+          {/* Right: Active + Completed Goals */}
+          <div className="lg:col-span-8 space-y-6">
 
-          {/* Right Column: Goal Lists */}
-          <section className="lg:col-span-7 space-y-6">
-            
             {/* Active Goals */}
-            <div className="space-y-3">
-              <h2 className="text-lg font-bold flex items-center gap-2 text-slate-300">
-                <Flame className="h-5 w-5 text-orange-400" />
-                Active Objectives ({activeGoals.length})
-              </h2>
+            <section aria-label="Active goals" className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Flame className="h-4 w-4 text-amber-400" aria-hidden="true" />
+                <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                  Active Objectives ({activeGoals.length})
+                </h2>
+              </div>
 
               {loading ? (
-                <div className="text-slate-500 text-center py-12 text-sm">Loading wellness goals...</div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 rounded-3xl bg-slate-900/40 animate-pulse border border-white/[0.04]" />)}
+                </div>
               ) : activeGoals.length === 0 ? (
-                <div className="bg-white/5 border border-white/5 rounded-2xl p-12 text-center text-slate-500 text-xs">
-                  No active goals at this moment. Build your wellness checklist!
+                <div className="rounded-3xl border border-white/[0.04] bg-slate-900/20 p-10 text-center space-y-3 backdrop-blur-xl">
+                  <Target className="h-8 w-8 text-slate-600 mx-auto" aria-hidden="true" />
+                  <p className="text-xs text-slate-400 font-bold">No active goals</p>
+                  <p className="text-xs text-slate-500">Create your first wellness goal or adopt an AI suggestion.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {activeGoals.map((goal) => (
-                    <div key={goal._id} className="bg-white/5 border border-white/5 rounded-xl p-4 flex flex-col justify-between gap-4 transition-all hover:bg-white/10">
-                      <div className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">{goal.frequency}</span>
+                    <div key={goal._id} className="rounded-3xl border border-white/[0.05] bg-slate-900/40 p-5 flex flex-col justify-between gap-4 hover:border-white/10 hover:bg-slate-900/60 transition-all duration-300 shadow-md">
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <FreqBadge freq={goal.frequency} />
                           {goal.ai_suggested && (
-                            <span className="text-[9px] bg-purple-500/10 border border-purple-500/20 text-purple-300 px-1.5 py-0.5 rounded font-bold uppercase">
-                              AI Suggested
+                            <span className="text-[9px] bg-violet-500/10 border border-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                              AI
                             </span>
                           )}
                         </div>
-                        <h3 className="text-sm font-bold text-slate-200 leading-tight">{goal.title}</h3>
-                        <p className="text-[11px] text-slate-500">Target: {goal.target_value} ({goal.type})</p>
+                        <h3 className="text-xs font-bold text-slate-200 leading-snug">{goal.title}</h3>
+                        <div className="flex items-center gap-2">
+                          <TypeBadge type={goal.type} />
+                          <span className="text-[10px] text-slate-500 font-semibold">Target: {goal.target_value}</span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                      <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
                         <button
                           onClick={() => handleComplete(goal._id)}
-                          className="flex-1 inline-flex items-center justify-center gap-1 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 hover:bg-emerald-600 hover:text-white font-bold text-[10px] py-1.5 rounded-lg transition-all"
+                          className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 font-bold text-[10px] py-2 rounded-xl transition-all focus:outline-none focus:ring-1 focus:ring-emerald-500"
                         >
-                          <Check className="h-3.5 w-3.5" />
-                          Complete
+                          <Check className="h-3.5 w-3.5" /> Complete
                         </button>
                         <button
                           onClick={() => handleDelete(goal._id)}
-                          className="p-1.5 bg-red-500/10 border border-red-500/20 text-slate-500 hover:text-red-400 rounded-lg transition-all"
+                          className="p-2 bg-white/[0.02] hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 border border-white/[0.04] rounded-xl transition-all focus:outline-none"
+                          aria-label={`Delete goal ${goal.title}`}
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
@@ -285,34 +356,33 @@ export default function GoalsPage() {
                   ))}
                 </div>
               )}
-            </div>
+            </section>
 
             {/* Completed Goals */}
             {completedGoals.length > 0 && (
-              <div className="space-y-3 pt-6 border-t border-white/5">
-                <h2 className="text-lg font-bold flex items-center gap-2 text-slate-400">
-                  <Award className="h-5 w-5 text-emerald-400" />
-                  Accomplished Goals ({completedGoals.length})
-                </h2>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <section aria-label="Completed goals" className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Award className="h-4 w-4 text-emerald-400" aria-hidden="true" />
+                  <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
+                    Accomplished ({completedGoals.length})
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {completedGoals.map((goal) => (
-                    <div key={goal._id} className="bg-emerald-500/5 border border-emerald-500/10 rounded-xl p-4 opacity-75 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-sm font-bold text-slate-300 line-through leading-tight">{goal.title}</h3>
-                        <Award className="h-4 w-4 text-emerald-400 shrink-0" />
+                    <div key={goal._id} className="flex items-center justify-between bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4">
+                      <div className="space-y-0.5 min-w-0">
+                        <h3 className="text-xs font-bold text-slate-400 line-through truncate">{goal.title}</h3>
+                        <p className="text-[10px] text-slate-500 font-semibold">{goal.type} · {goal.target_value}</p>
                       </div>
-                      <p className="text-[10px] text-slate-500">Completed at target: {goal.target_value} ({goal.type})</p>
+                      <Award className="h-5 w-5 text-emerald-400 shrink-0 ml-3 animate-pulse" aria-hidden="true" />
                     </div>
                   ))}
                 </div>
-              </div>
+              </section>
             )}
-
-          </section>
-
+          </div>
         </div>
       </div>
-    </main>
+    </ProtectedRoute>
   );
 }

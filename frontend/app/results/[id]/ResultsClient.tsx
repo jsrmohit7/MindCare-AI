@@ -56,12 +56,12 @@ export default function ResultsClient({ id }: ResultsClientProps) {
     if (!value) return "bg-slate-500/10 border-slate-500/30 text-slate-300";
     const v = value.toLowerCase();
     if (v.includes("severe") || v.includes("high")) {
-      return "bg-rose-500/10 border-rose-500/30 text-rose-300";
+      return "bg-rose-500/10 border-rose-500/25 text-rose-400";
     }
     if (v.includes("moderat")) {
-      return "bg-amber-500/10 border-amber-500/30 text-amber-300";
+      return "bg-amber-500/10 border-amber-500/25 text-amber-400";
     }
-    return "bg-emerald-500/10 border-emerald-500/30 text-emerald-300";
+    return "bg-emerald-500/10 border-emerald-500/25 text-emerald-400";
   };
 
   // Defensive helper: returns the correct Tailwind gradient for a risk level string
@@ -86,34 +86,34 @@ export default function ResultsClient({ id }: ResultsClientProps) {
   return (
     <div className="space-y-8 py-6">
       {/* Back Button */}
-      <Link href="/history" className="inline-flex items-center text-sm font-semibold text-slate-400 hover:text-white transition-colors">
+      <Link href="/history" className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />
         <span>Back to Assessment History</span>
       </Link>
 
       {/* Hero Overview */}
-      <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/60 p-8 shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 opacity-30 blur-2xl" />
+      <div className="relative overflow-hidden rounded-3xl border border-white/[0.05] bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/5 via-purple-500/5 to-pink-500/5 opacity-30 blur-2xl" />
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <h1 className="text-3xl font-extrabold tracking-tight text-white">Mental Health Assessment Report</h1>
-            <p className="text-sm text-slate-400">Generated on {new Date(metadata.generated_at).toLocaleString()}</p>
+            <h1 className="text-2xl font-extrabold tracking-tight text-white sm:text-3xl">Mental Health Assessment Report</h1>
+            <p className="text-xs text-slate-400">Generated on {new Date(metadata.generated_at).toLocaleString()}</p>
           </div>
           <div className="flex flex-col items-start md:items-end space-y-1">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Overall Risk Level</span>
-            <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-base font-extrabold ${getSeverityBadgeClass(overallLevel)}`}>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Overall Risk Level</span>
+            <span className={`inline-flex items-center rounded-full border px-4 py-1.5 text-sm font-bold ${getSeverityBadgeClass(overallLevel)}`}>
               {overallLevel}
             </span>
           </div>
         </div>
 
         {/* Wellness Severity Gauge */}
-        <div className="mt-8 space-y-2">
-          <div className="flex justify-between text-sm font-bold text-slate-300">
+        <div className="mt-8 space-y-2.5">
+          <div className="flex justify-between text-xs font-bold text-slate-300">
             <span>Wellness Severity Meter</span>
             <span>{Math.round(overallScore)} / 100</span>
           </div>
-          <div className="h-3 w-full rounded-full bg-slate-950 overflow-hidden border border-white/5">
+          <div className="h-2.5 w-full rounded-full bg-slate-950 overflow-hidden border border-white/[0.04]">
             <div
               className={`h-full rounded-full bg-gradient-to-r ${getOverallRiskGradient(overallLevel)} transition-all duration-1000 ease-out`}
               style={{ width: `${clampScore(overallScore)}%` }}
@@ -126,23 +126,23 @@ export default function ResultsClient({ id }: ResultsClientProps) {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
         {/* Left Column: Clinical & Lifestyle Scores */}
-        <div className="lg:col-span-1 space-y-8">
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-200">Clinical Severity Breakdown</h2>
+        <div className="lg:col-span-1 space-y-6">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-white/[0.04]">Clinical Severity Breakdown</h2>
 
           {/* PHQ-9 Card */}
           <Card hoverEffect className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-indigo-400">
-                <Heart className="h-5 w-5" />
-                <h3 className="font-bold text-slate-100">Depression (PHQ-9)</h3>
+                <Heart className="h-4.5 w-4.5" />
+                <h3 className="font-bold text-slate-200 text-sm">Depression (PHQ-9)</h3>
               </div>
-              <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${getSeverityBadgeClass(risk_profile.phq9?.severity)}`}>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-bold ${getSeverityBadgeClass(risk_profile.phq9?.severity)}`}>
                 {risk_profile.phq9?.severity}
               </span>
             </div>
             <div className="flex items-baseline space-x-1.5">
               <span className="text-3xl font-extrabold text-white">{risk_profile.phq9?.score}</span>
-              <span className="text-sm text-slate-500">/ 27</span>
+              <span className="text-xs text-slate-500 font-bold">/ 27</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-400">
               Measures depressive symptom severity. Scores of 10+ suggest moderate to severe symptoms that warrant clinical review.
@@ -153,16 +153,16 @@ export default function ResultsClient({ id }: ResultsClientProps) {
           <Card hoverEffect className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2 text-indigo-400">
-                <ShieldAlert className="h-5 w-5" />
-                <h3 className="font-bold text-slate-100">Anxiety (GAD-7)</h3>
+                <ShieldAlert className="h-4.5 w-4.5" />
+                <h3 className="font-bold text-slate-200 text-sm">Anxiety (GAD-7)</h3>
               </div>
-              <span className={`rounded-full border px-2.5 py-0.5 text-xs font-bold ${getSeverityBadgeClass(risk_profile.gad7?.severity)}`}>
+              <span className={`rounded-full border px-2.5 py-0.5 text-[9px] font-bold ${getSeverityBadgeClass(risk_profile.gad7?.severity)}`}>
                 {risk_profile.gad7?.severity}
               </span>
             </div>
             <div className="flex items-baseline space-x-1.5">
               <span className="text-3xl font-extrabold text-white">{risk_profile.gad7?.score}</span>
-              <span className="text-sm text-slate-500">/ 21</span>
+              <span className="text-xs text-slate-500 font-bold">/ 21</span>
             </div>
             <p className="text-xs leading-relaxed text-slate-400">
               Evaluates generalized anxiety symptoms. Scores of 10+ suggest moderate to severe anxiety levels.
@@ -170,14 +170,14 @@ export default function ResultsClient({ id }: ResultsClientProps) {
           </Card>
 
           {/* Lifestyle Indicators */}
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-200 pt-4">Lifestyle Indicators</h2>
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 pt-4 pb-2 border-b border-white/[0.04]">Lifestyle Indicators</h2>
 
           {/* Stress Card */}
-          <Card hoverEffect className="space-y-3 text-sm">
-            <div className="flex items-center space-x-2 text-amber-400 pb-2 border-b border-white/5">
+          <Card hoverEffect className="space-y-3 text-xs">
+            <div className="flex items-center space-x-2 text-amber-400 pb-2 border-b border-white/[0.04]">
               <Zap className="h-4 w-4" />
-              <span className="font-bold text-slate-100">Stress</span>
-              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-xs font-bold ${getSeverityBadgeClass(risk_profile.stress?.severity)}`}>
+              <span className="font-bold text-slate-200">Stress Perception</span>
+              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-[9px] font-bold ${getSeverityBadgeClass(risk_profile.stress?.severity)}`}>
                 {risk_profile.stress?.severity}
               </span>
             </div>
@@ -185,17 +185,17 @@ export default function ResultsClient({ id }: ResultsClientProps) {
               <span className="text-slate-400">Stress Score</span>
               <span className="font-bold text-slate-200">{risk_profile.stress?.score}</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Overall score reflecting reported stress level frequency and emotional pressure.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Reflects reported stress frequency and self-rated emotional pressure levels.
             </p>
           </Card>
 
           {/* Sleep Card */}
-          <Card hoverEffect className="space-y-3 text-sm">
-            <div className="flex items-center space-x-2 text-blue-400 pb-2 border-b border-white/5">
+          <Card hoverEffect className="space-y-3 text-xs">
+            <div className="flex items-center space-x-2 text-blue-400 pb-2 border-b border-white/[0.04]">
               <Moon className="h-4 w-4" />
-              <span className="font-bold text-slate-100">Sleep</span>
-              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-xs font-bold ${getSeverityBadgeClass(risk_profile.sleep?.severity)}`}>
+              <span className="font-bold text-slate-200">Sleep Quality</span>
+              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-[9px] font-bold ${getSeverityBadgeClass(risk_profile.sleep?.severity)}`}>
                 {risk_profile.sleep?.severity}
               </span>
             </div>
@@ -203,17 +203,17 @@ export default function ResultsClient({ id }: ResultsClientProps) {
               <span className="text-slate-400">Sleep Score</span>
               <span className="font-bold text-slate-200">{risk_profile.sleep?.score}</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Overall score reflecting sleep duration, night awakenings, latency, and subjective quality.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Based on duration, awakenings, difficulty falling asleep, and subjective quality.
             </p>
           </Card>
 
           {/* Lifestyle Card */}
-          <Card hoverEffect className="space-y-3 text-sm">
-            <div className="flex items-center space-x-2 text-emerald-400 pb-2 border-b border-white/5">
+          <Card hoverEffect className="space-y-3 text-xs">
+            <div className="flex items-center space-x-2 text-emerald-400 pb-2 border-b border-white/[0.04]">
               <Leaf className="h-4 w-4" />
-              <span className="font-bold text-slate-100">Lifestyle</span>
-              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-xs font-bold ${getSeverityBadgeClass(risk_profile.lifestyle?.severity)}`}>
+              <span className="font-bold text-slate-200">Habits & Diet</span>
+              <span className={`ml-auto rounded-full border px-2.5 py-0.5 text-[9px] font-bold ${getSeverityBadgeClass(risk_profile.lifestyle?.severity)}`}>
                 {risk_profile.lifestyle?.severity}
               </span>
             </div>
@@ -221,38 +221,38 @@ export default function ResultsClient({ id }: ResultsClientProps) {
               <span className="text-slate-400">Lifestyle Score</span>
               <span className="font-bold text-slate-200">{risk_profile.lifestyle?.score}</span>
             </div>
-            <p className="text-xs text-slate-500 leading-relaxed">
-              Overall score reflecting physical exercise, diet, hydration, screen time, and substance use habits.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Aggregates exercise, screen time, water intake, meals, alcohol, and smoking.
             </p>
           </Card>
         </div>
 
         {/* Right Column: AI Analysis & Recommendations */}
-        <div className="lg:col-span-2 space-y-8">
-          <h2 className="text-xl font-extrabold tracking-tight text-slate-200 flex items-center space-x-2">
-            <BrainCircuit className="h-6 w-6 text-purple-400" />
+        <div className="lg:col-span-2 space-y-6">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-500 pb-2 border-b border-white/[0.04] flex items-center gap-2">
+            <BrainCircuit className="h-5 w-5 text-indigo-400" />
             <span>Watsonx AI Clinical Insight</span>
           </h2>
 
           {/* Summary */}
           <Card className="space-y-4">
-            <h3 className="font-extrabold text-indigo-300">Executive Summary</h3>
-            <p className="text-sm leading-relaxed text-slate-300">{ai_analysis.summary}</p>
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Executive Summary</h3>
+            <p className="text-xs leading-relaxed text-slate-300">{ai_analysis.summary}</p>
           </Card>
 
           {/* Detailed Risk Assessment */}
           <Card className="space-y-4">
-            <h3 className="font-extrabold text-indigo-300">Detailed Risk Assessment</h3>
-            <p className="text-sm leading-relaxed text-slate-300">{ai_analysis.risk_assessment}</p>
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Detailed Risk Assessment</h3>
+            <p className="text-xs leading-relaxed text-slate-300">{ai_analysis.risk_assessment}</p>
           </Card>
 
           {/* Recommendations list */}
           <Card className="space-y-4">
-            <h3 className="font-extrabold text-indigo-300">Actionable Recommendations</h3>
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Actionable Recommendations</h3>
             <ul className="space-y-3">
               {ai_analysis.recommendations.map((rec, idx) => (
-                <li key={idx} className="flex items-start text-sm leading-relaxed text-slate-300 bg-white/5 rounded-xl p-3 border border-white/5">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-400 mr-3 shrink-0 mt-0.5" />
+                <li key={idx} className="flex items-start text-xs leading-relaxed text-slate-300 bg-white/[0.02] rounded-2xl p-3 border border-white/[0.04]">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-400 mr-3 shrink-0 mt-0.5" />
                   <span>{rec}</span>
                 </li>
               ))}
@@ -261,28 +261,29 @@ export default function ResultsClient({ id }: ResultsClientProps) {
 
           {/* Follow Up */}
           <Card className="space-y-4">
-            <h3 className="font-extrabold text-indigo-300">Follow-up Protocols</h3>
-            <p className="text-sm leading-relaxed text-slate-300">{ai_analysis.follow_up}</p>
+            <h3 className="text-sm font-bold text-indigo-400 uppercase tracking-wider">Follow-up Protocols</h3>
+            <p className="text-xs leading-relaxed text-slate-300">{ai_analysis.follow_up}</p>
           </Card>
 
           {/* Need Professional Help promotion card */}
-          <Card className="p-6 rounded-2xl border border-white/10 bg-slate-900/40 space-y-4 shadow-xl backdrop-blur-xl">
-            <div className="flex items-center space-x-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg">
-                <Stethoscope className="h-6 w-6" />
+          <Card className="p-6 rounded-3xl border border-white/[0.05] bg-slate-900/40 relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/5 blur-3xl rounded-full" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5 relative z-10">
+              <div className="flex items-center space-x-3.5">
+                <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-md">
+                  <Stethoscope className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white">Need Professional Support?</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">Find licensed mental health experts and clinics near your location.</p>
+                </div>
               </div>
-              <div className="space-y-0.5">
-                <h3 className="text-lg font-bold text-white">Need Professional Help?</h3>
-                <p className="text-xs text-slate-400">Based on your assessment, you may benefit from consulting a mental health professional.</p>
-              </div>
-            </div>
-            <div className="pt-2 flex justify-end">
               <Link
                 href="/consult"
-                className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/15 inline-flex items-center"
+                className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-5 py-3 text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10 inline-flex items-center gap-1 active:scale-95"
               >
                 <span>Find Professionals</span>
-                <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </Card>
@@ -290,24 +291,24 @@ export default function ResultsClient({ id }: ResultsClientProps) {
           {/* Disclaimer & Metadata */}
           <div className="space-y-4">
             {/* Disclaimer */}
-            <div className="flex items-start rounded-xl border border-amber-500/20 bg-amber-950/10 p-4 text-xs text-amber-300 leading-relaxed">
-              <AlertTriangle className="h-5 w-5 mr-3 shrink-0 text-amber-400" />
+            <div className="flex items-start rounded-2xl border border-amber-500/10 bg-amber-950/10 p-4.5 text-[11px] text-amber-300 leading-relaxed italic">
+              <AlertTriangle className="h-4.5 w-4.5 mr-3 shrink-0 text-amber-400 mt-0.5" />
               <span>{ai_analysis.disclaimer}</span>
             </div>
 
             {/* Pipeline Metadata */}
-            <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-white/5 bg-slate-900/10 p-4 text-[10px] sm:text-xs text-slate-500">
+            <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/[0.04] bg-slate-900/20 p-4 text-[10px] text-slate-500 font-semibold">
               <div className="flex items-center space-x-1.5">
-                <BrainCircuit className="h-4 w-4" />
-                <span>Model: {metadata.model}</span>
+                <BrainCircuit className="h-3.5 w-3.5" />
+                <span>Inference: {metadata.model}</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <Database className="h-4 w-4" />
-                <span>Schema Version: {metadata.schema_version}</span>
+                <Database className="h-3.5 w-3.5" />
+                <span>Schema: {metadata.schema_version}</span>
               </div>
               <div className="flex items-center space-x-1.5">
-                <Clock className="h-4 w-4" />
-                <span>Response Validated</span>
+                <Clock className="h-3.5 w-3.5" />
+                <span>Clinical Response Signed</span>
               </div>
             </div>
           </div>

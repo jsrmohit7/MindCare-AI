@@ -31,7 +31,7 @@ api.interceptors.response.use(
   (error) => {
     let message = "An unexpected network or server error occurred. Please try again.";
     let code = "UNKNOWN_ERROR";
-    let details: any = null;
+    let details: unknown = null;
 
     if (error.response) {
       // Server returned a response outside 2xx status
@@ -42,8 +42,8 @@ api.interceptors.response.use(
         details = errorData.error.details || details;
       } else if (error.response.data && typeof error.response.data === "object") {
         // Fallback for standard FastAPI validation errors if interceptor failed
-        const data = error.response.data as any;
-        message = data.detail || message;
+        const data = error.response.data as Record<string, unknown>;
+        message = (data.detail as string) || message;
       }
     } else if (error.request) {
       // Request was sent but no reply was received

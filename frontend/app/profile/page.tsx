@@ -52,37 +52,38 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="mx-auto max-w-2xl py-6">
-        <div className="rounded-3xl border border-white/10 bg-slate-900/50 p-8 shadow-2xl backdrop-blur-xl space-y-8">
+      <div className="mx-auto max-w-xl py-6">
+        <div className="rounded-3xl border border-white/[0.05] bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl space-y-8">
+          
           {/* Header */}
-          <div className="flex flex-col items-center justify-center text-center space-y-4 pb-6 border-b border-white/5">
-            <div className="flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/20 text-3xl font-bold">
+          <div className="flex flex-col items-center justify-center text-center space-y-4 pb-6 border-b border-white/[0.04]">
+            <div className="flex h-18 w-18 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/10 text-2xl font-bold">
               {user?.full_name?.charAt(0) || "U"}
             </div>
             <div className="space-y-1">
-              <h2 className="text-2xl font-extrabold text-white">{user?.full_name}</h2>
-              <p className="text-sm font-medium text-slate-400">Account Profile Details</p>
+              <h2 className="text-xl font-extrabold text-white">{user?.full_name}</h2>
+              <p className="text-xs font-semibold text-slate-400">Account Profile details & info</p>
             </div>
           </div>
 
           {/* Grid of Profile Items */}
-          <div className="space-y-4">
+          <div className="space-y-3">
             {details.map((detail, idx) => {
               const Icon = detail.icon;
               return (
                 <div
                   key={idx}
-                  className="flex items-center justify-between rounded-2xl bg-white/5 p-4 border border-white/5"
+                  className="flex items-center justify-between rounded-2xl bg-white/[0.01] p-4 border border-white/[0.04]"
                 >
-                  <div className="flex items-center space-x-3">
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400">
-                      <Icon className="h-5 w-5" />
+                  <div className="flex items-center space-x-3.5">
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/10">
+                      <Icon className="h-4.5 w-4.5" />
                     </div>
                     <div>
-                      <div className="text-xs text-slate-400 font-semibold uppercase tracking-wider">
+                      <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">
                         {detail.label}
                       </div>
-                      <div className="text-sm font-semibold text-white mt-0.5">
+                      <div className="text-xs font-bold text-slate-200 mt-0.5">
                         {detail.value}
                       </div>
                     </div>

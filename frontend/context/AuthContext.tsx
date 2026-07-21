@@ -20,7 +20,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (data: any) => Promise<void>;
+  register: (data: Record<string, unknown>) => Promise<void>;
   logout: () => void;
 }
 
@@ -66,7 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const profileResponse = await api.get("/auth/me");
       setUser(profileResponse.data);
       router.push("/dashboard");
-    } catch (error: any) {
+    } catch (error) {
       localStorage.removeItem("token");
       setUser(null);
       throw error;
@@ -75,15 +75,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const register = async (data: any) => {
+  const register = async (data: Record<string, unknown>) => {
     try {
       setLoading(true);
       // Backend expects role, age, gender, phone to be valid
       await api.post("/auth/register", data);
       
       // Automatically log in after registration
-      await login(data.email, data.password);
-    } catch (error: any) {
+      await login(data.email as string, data.password as string);
+    } catch (error) {
       throw error;
     } finally {
       setLoading(false);

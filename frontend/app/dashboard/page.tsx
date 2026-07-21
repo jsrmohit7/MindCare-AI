@@ -26,7 +26,8 @@ import {
   ArrowDown,
   Minus,
   Trophy,
-  Target
+  Target,
+  BarChart3,
 } from "lucide-react";
 
 import Link from "next/link";
@@ -38,15 +39,12 @@ import { journalService, JournalEntry } from "@/services/journal";
 import { goalsService, WellnessGoal } from "@/services/goals";
 import { journeyService, MonthlyReview, CorrelationsState } from "@/services/journey";
 
-
-
-
 // Lazy load heavy components
 const AnalyticsCharts = dynamic(
   () => import("@/components/daily-checkin/AnalyticsCharts"),
   {
     ssr: false,
-    loading: () => <div className="h-[320px] w-full rounded-2xl bg-white/5 animate-pulse" aria-hidden="true" />,
+    loading: () => <div className="h-[320px] w-full rounded-2xl bg-white/[0.02] animate-pulse" aria-hidden="true" />,
   }
 );
 
@@ -54,11 +52,10 @@ const WellnessCalendar = dynamic(
   () => import("@/components/WellnessCalendar"),
   {
     ssr: false,
-    loading: () => <div className="h-[320px] w-full rounded-2xl bg-white/5 animate-pulse" aria-hidden="true" />,
+    loading: () => <div className="h-[320px] w-full rounded-2xl bg-white/[0.02] animate-pulse" aria-hidden="true" />,
   }
 );
 
-// Greeting based on time of day
 function getGreeting(): string {
   const hour = new Date().getHours();
   if (hour < 12) return "Good morning";
@@ -66,7 +63,6 @@ function getGreeting(): string {
   return "Good evening";
 }
 
-// Today's date formatted
 function getTodayDate(): string {
   return new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -76,23 +72,22 @@ function getTodayDate(): string {
   });
 }
 
-// Progress comparison arrow icon
 function TrendArrow({ trend }: { trend: "better" | "same" | "worse" }) {
   if (trend === "better")
     return (
-      <span className="inline-flex items-center text-emerald-400 font-bold text-xs gap-0.5">
+      <span className="inline-flex items-center text-emerald-400 font-bold text-[10px] gap-0.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
         <ArrowUp className="h-3 w-3" /> Better
       </span>
     );
   if (trend === "worse")
     return (
-      <span className="inline-flex items-center text-rose-400 font-bold text-xs gap-0.5">
-        <ArrowDown className="h-3 w-3" /> Needs Improvement
+      <span className="inline-flex items-center text-rose-400 font-bold text-[10px] gap-0.5 px-2 py-0.5 rounded-full bg-rose-500/10 border border-rose-500/20">
+        <ArrowDown className="h-3 w-3" /> Needs Attention
       </span>
     );
   return (
-    <span className="inline-flex items-center text-slate-400 font-bold text-xs gap-0.5">
-      <Minus className="h-3 w-3" /> Same
+    <span className="inline-flex items-center text-slate-400 font-bold text-[10px] gap-0.5 px-2 py-0.5 rounded-full bg-white/[0.04] border border-white/[0.05]">
+      <Minus className="h-3 w-3" /> Stable
     </span>
   );
 }
@@ -109,14 +104,11 @@ function getMoodTrend(currentMood: string, previousMood: string): "better" | "sa
   const currentIdx = MOOD_SCALE.indexOf(currentMood);
   const previousIdx = MOOD_SCALE.indexOf(previousMood);
   if (currentIdx < 0 || previousIdx < 0) return "same";
-  // Lower index = better mood (Very Happy = 0, Very Sad = 4)
   if (currentIdx < previousIdx) return "better";
   if (currentIdx > previousIdx) return "worse";
   return "same";
 }
 
-
-// Modal for calendar day click
 function DayReportModal({
   record,
   onClose,
@@ -126,55 +118,84 @@ function DayReportModal({
 }) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md transition-all"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={`Wellness report for ${record.date}`}
     >
       <div
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900 p-6 space-y-4 shadow-2xl"
+        className="w-full max-w-md rounded-3xl border border-white/[0.06] bg-slate-900 p-6 space-y-5 shadow-2xl relative"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between border-b border-white/5 pb-3">
+        <div className="flex items-center justify-between border-b border-white/[0.04] pb-4">
           <div>
             <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Daily Report</p>
-            <h3 className="text-lg font-extrabold text-white">{record.date}</h3>
+            <h3 className="text-base font-extrabold text-white mt-0.5">{record.date}</h3>
           </div>
           <span className="rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-bold text-indigo-300 border border-indigo-500/20">
-            Score: {record.wellness_score}
+            Score {record.wellness_score}
           </span>
         </div>
         <div className="grid grid-cols-2 gap-3 text-xs">
           {[
-            { label: "Mood", value: record.mood },
-            { label: "Stress", value: `${record.stress}/10` },
-            { label: "Sleep", value: record.sleep },
+            { label: "Mood Today", value: record.mood },
+            { label: "Stress Level", value: `${record.stress}/10` },
+            { label: "Sleep Quality", value: record.sleep },
             { label: "Anxiety", value: `${record.anxiety}/10` },
-            { label: "Water", value: record.water },
+            { label: "Hydration", value: record.water },
             { label: "Exercise", value: record.exercise ? `${record.exercise_minutes} mins` : "No" },
           ].map(({ label, value }) => (
-            <div key={label} className="bg-white/5 p-3 rounded-xl">
-              <p className="text-[10px] text-slate-500 font-bold uppercase">{label}</p>
-              <p className="font-semibold text-slate-200 mt-0.5">{value}</p>
+            <div key={label} className="bg-white/[0.02] border border-white/[0.04] p-3 rounded-2xl">
+              <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
+              <p className="font-semibold text-slate-200 mt-1">{value}</p>
             </div>
           ))}
         </div>
         {record.ai_summary && (
-          <div className="rounded-xl bg-indigo-950/20 border border-indigo-500/10 p-4 space-y-2">
-            <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-400 uppercase">
-              <Sparkles className="h-3.5 w-3.5" /> AI Insight
+          <div className="rounded-2xl bg-indigo-950/20 border border-indigo-500/10 p-4 space-y-2">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 uppercase tracking-wider">
+              <Sparkles className="h-3.5 w-3.5" /> Watsonx AI Insight
             </div>
-            <p className="text-xs text-slate-300 leading-relaxed">{record.ai_summary}</p>
+            <p className="text-xs text-slate-300 leading-relaxed italic">&ldquo;{record.ai_summary}&rdquo;</p>
           </div>
         )}
         <button
           onClick={onClose}
-          className="w-full rounded-xl bg-white/5 hover:bg-white/10 text-xs font-bold text-slate-200 py-2.5 transition-all"
+          className="w-full rounded-2xl bg-white/[0.04] hover:bg-white/[0.08] text-xs font-bold text-slate-300 py-3 transition-all border border-white/[0.05]"
         >
-          Close
+          Close Report
         </button>
       </div>
+    </div>
+  );
+}
+
+function StatCard({
+  icon,
+  label,
+  value,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: React.ReactNode;
+}) {
+  return (
+    <div className="flex items-center gap-3.5 bg-white/[0.02] rounded-2xl p-4 border border-white/[0.04] shadow-sm hover:border-white/[0.08] transition-all">
+      <span className="shrink-0 p-2.5 rounded-xl bg-white/[0.02] border border-white/[0.04]">{icon}</span>
+      <div className="min-w-0">
+        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
+        <p className="text-xs font-bold text-slate-200 mt-1 truncate">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+function SectionHeader({ label, action }: { label: string; action?: React.ReactNode }) {
+  return (
+    <div className="flex items-center justify-between mb-4 mt-2">
+      <h2 className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</h2>
+      {action}
     </div>
   );
 }
@@ -217,7 +238,7 @@ export default function DashboardPage() {
         journalsRes,
         goalsRes,
         reviewRes,
-        correlationsRes
+        correlationsRes,
       ] = await Promise.all([
         dailyWellnessService.getTodayCheckIn(),
         dailyWellnessService.getStreak(),
@@ -228,7 +249,7 @@ export default function DashboardPage() {
         journalService.listJournals(),
         goalsService.listGoals("active"),
         journeyService.getMonthlyReview(),
-        journeyService.getCorrelations()
+        journeyService.getCorrelations(),
       ]);
       setTodayCheckedIn(todayRes.checked_in);
       setTodayRecord(todayRes.data);
@@ -237,8 +258,7 @@ export default function DashboardPage() {
       setHistoryData(historyRes);
       setDashboardState(stateRes);
       setReasoning(reasoningRes);
-      
-      // Set Phase 3 States
+
       if (journalsRes && journalsRes.length > 0) {
         setLatestJournal(journalsRes[0]);
       }
@@ -250,12 +270,8 @@ export default function DashboardPage() {
     } finally {
       setLoadingWellness(false);
     }
-
   };
 
-
-
-  // Progress comparison metrics (current vs previous check-in)
   const progressMetrics = useMemo(() => {
     if (analyticsData.length < 2) return null;
     const sorted = [...analyticsData].sort((a, b) => a.date.localeCompare(b.date));
@@ -285,7 +301,6 @@ export default function DashboardPage() {
     return assessments[0];
   }, [assessments]);
 
-  // Achievements
   const achievements = useMemo(
     () =>
       computeAchievements({
@@ -304,384 +319,482 @@ export default function DashboardPage() {
   );
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
+  const wellnessScore = dashboardState?.wellness_score ?? todayRecord?.wellness_score;
 
   return (
     <ProtectedRoute>
-      <div className="space-y-6 py-6 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        {/* ——— 1. Welcome Back Banner ——— */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-slate-900/50 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
-          <div className="absolute right-0 top-0 h-64 w-64 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none" aria-hidden="true" />
-          <div className="absolute bottom-0 left-12 h-40 w-40 rounded-full bg-pink-500/5 blur-3xl pointer-events-none" aria-hidden="true" />
+        {/* ─── 1. Header: Greeting + Streak ─── */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-1.5">
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{getTodayDate()}</p>
+            <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">
+              {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"} 👋
+            </h1>
+            <p className="text-xs text-slate-400 leading-relaxed max-w-md">
+              Welcome back to your personalized wellness workspace. Let&apos;s review today&apos;s patterns.
+            </p>
+          </div>
 
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
-            <div className="space-y-2">
-              <div className="inline-flex items-center space-x-2 rounded-full bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-400 border border-indigo-500/20">
-                <Sparkles className="h-3 w-3 animate-spin" aria-hidden="true" />
-                <span>MindCare Wellness Companion</span>
-              </div>
-              <h1 className="bg-gradient-to-r from-white via-indigo-100 to-indigo-300 bg-clip-text text-3xl font-extrabold tracking-tight text-transparent sm:text-4xl">
-                {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"} 👋
-              </h1>
-              <p className="text-slate-400 text-sm">{getTodayDate()}</p>
-              <p className="max-w-2xl text-slate-500 text-xs sm:text-sm leading-relaxed">
-                Track daily habits to build long-term stress resilience and uncover mood patterns.
-              </p>
-            </div>
-
-            <div className="flex shrink-0 items-center space-x-3 rounded-2xl bg-white/5 p-4 border border-white/5">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 text-white shadow-lg">
-                <Flame className="h-6 w-6 animate-pulse" aria-hidden="true" />
-              </div>
+          <div className="flex items-center gap-3 shrink-0">
+            {/* Streak Indicator */}
+            <div className="flex items-center gap-3 bg-amber-500/[0.04] border border-amber-500/15 rounded-2xl px-4 py-2.5">
+              <Flame className="h-5 w-5 text-amber-500 shrink-0" aria-hidden="true" />
               <div>
-                <div className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Current Streak</div>
-                <div className="text-2xl font-black text-white">{streak.current_streak} Days</div>
+                <p className="text-[9px] font-bold text-amber-500/80 uppercase tracking-wider">Active Streak</p>
+                <p className="text-base font-black text-amber-400 leading-none mt-0.5">{streak.current_streak} days</p>
               </div>
             </div>
+
+            {/* Check-In CTA */}
+            <Link
+              href="/daily-checkin"
+              className={`
+                flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold transition-all border
+                focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                ${todayCheckedIn
+                  ? "bg-emerald-500/10 border-emerald-500/15 text-emerald-400 cursor-default"
+                  : "bg-indigo-600 border-indigo-500/30 text-white hover:bg-indigo-500 shadow-md shadow-indigo-500/20 active:scale-95"
+                }
+              `}
+            >
+              <Heart className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>{todayCheckedIn ? "Checked in today ✓" : "Log Daily Check-in"}</span>
+            </Link>
           </div>
         </div>
 
-        {/* ——— 2. Today's Wellness + Progress ——— */}
+        {/* ─── 2. Vitals deck & Wellness Score Gauge ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Score card */}
+          <div className="glass-card rounded-3xl p-6 flex flex-col justify-between gap-6 relative overflow-hidden">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/5 blur-3xl rounded-full" />
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Wellness Index</p>
+                <p className="text-4xl font-black text-white mt-1.5 leading-none">
+                  {loadingWellness ? "—" : wellnessScore ?? "—"}
+                  <span className="text-base text-slate-500 font-bold ml-1">/100</span>
+                </p>
+              </div>
+              <div className="relative flex h-16 w-16 items-center justify-center">
+                <svg viewBox="0 0 48 48" className="h-16 w-16 -rotate-90" aria-hidden="true">
+                  <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth="3.5" />
+                  <circle
+                    cx="24" cy="24" r="20" fill="none"
+                    stroke="#6366f1" strokeWidth="3.5"
+                    strokeLinecap="round"
+                    strokeDasharray={`${2 * Math.PI * 20}`}
+                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - (wellnessScore ?? 0) / 100)}`}
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+                <Activity className="absolute h-5 w-5 text-indigo-400" aria-hidden="true" />
+              </div>
+            </div>
 
-          {/* Today's Wellness */}
-          <div className="lg:col-span-2 rounded-2xl border border-white/10 bg-slate-900/40 p-6 space-y-5 shadow-xl backdrop-blur-xl">
-            <div className="flex items-center justify-between border-b border-white/5 pb-3">
-              <h2 className="text-lg font-bold text-white">🌿 Today&apos;s Wellness</h2>
+            {!loadingWellness && (
+              <div className="flex items-center gap-2">
+                {progressMetrics?.trend === "improving" ? (
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-2.5 py-0.5">
+                    <TrendingUp className="h-3 w-3" /> Improving +{progressMetrics.diff}%
+                  </span>
+                ) : progressMetrics?.trend === "needs_attention" ? (
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-full px-2.5 py-0.5">
+                    <TrendingDown className="h-3 w-3" /> Down -{progressMetrics.diff}%
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 bg-white/[0.04] border border-white/[0.05] rounded-full px-2.5 py-0.5">
+                    <Minus className="h-3 w-3" /> Stable
+                  </span>
+                )}
+                {todayCheckedIn && <span className="text-[10px] text-slate-500">vs yesterday</span>}
+              </div>
+            )}
+          </div>
+
+          {/* Vitals Parameter Row */}
+          <div className="glass-card rounded-3xl p-6 lg:col-span-2 space-y-4">
+            <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
+              <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Logged parameters</p>
               {todayCheckedIn && (
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
-                  ✓ Completed
+                <span className="text-[9px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">
+                  Logged for Today
                 </span>
               )}
             </div>
 
             {loadingWellness ? (
-              <div className="space-y-3">
-                <SkeletonLine className="h-28 rounded-xl" />
-                <div className="grid grid-cols-2 gap-3">
-                  {[1, 2, 3, 4].map((i) => <SkeletonLine key={i} className="h-16 rounded-xl" />)}
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => <SkeletonLine key={i} className="h-16 rounded-2xl" />)}
               </div>
             ) : !todayCheckedIn ? (
-              <div className="flex flex-col items-center justify-center py-8 text-center space-y-4">
-                <Heart className="h-10 w-10 text-slate-600 animate-pulse" aria-hidden="true" />
-                <div className="space-y-1">
-                  <p className="font-semibold text-slate-300 text-sm">No check-in completed today</p>
-                  <p className="text-xs text-slate-500 max-w-xs leading-relaxed">
-                    Take 30 seconds to record your mood, stress, sleep, and hydration.
-                  </p>
-                </div>
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-3.5">
+                <p className="text-xs text-slate-400 max-w-sm">
+                  You haven&apos;t logged today&apos;s check-in metrics yet. Take 30 seconds to capture your vitals.
+                </p>
                 <Link
                   href="/daily-checkin"
-                  className="rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/15 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900"
+                  className="rounded-xl bg-white/[0.04] border border-white/[0.08] hover:bg-white/[0.08] px-4 py-2 text-xs font-bold text-slate-200 transition-all active:scale-95"
                 >
-                  Complete Daily Check-In
+                  Start Daily Log
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5 items-start">
-                {/* Circular Score Gauge */}
-                <div className="flex flex-col items-center justify-center space-y-2">
-                  <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-4 border-white/5 bg-slate-950 shadow-inner">
-                    <div className="absolute inset-0 rounded-full border-4 border-indigo-500/40 animate-pulse" aria-hidden="true" />
-                    <div className="text-center">
-                      <span className="text-3xl font-black text-indigo-300">
-                        {dashboardState?.wellness_score ?? todayRecord?.wellness_score}
-                      </span>
-                      <span className="text-[10px] text-slate-500 font-bold block">Score</span>
-                    </div>
-
-                  </div>
-                  <span className="text-xs text-slate-400 font-semibold">Today&apos;s Balance</span>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  <StatCard icon={<Smile className="h-4.5 w-4.5 text-indigo-400" />} label="Mood" value={todayRecord?.mood ?? "—"} />
+                  <StatCard icon={<Activity className="h-4.5 w-4.5 text-rose-400" />} label="Stress Level" value={`${todayRecord?.stress ?? "—"}/10`} />
+                  <StatCard icon={<Clock className="h-4.5 w-4.5 text-blue-400" />} label="Sleep window" value={todayRecord?.sleep ?? "—"} />
+                  <StatCard icon={<Droplet className="h-4.5 w-4.5 text-cyan-400" />} label="Hydration" value={todayRecord?.water ?? "—"} />
                 </div>
 
-                {/* Metrics Grid */}
-                <div className="md:col-span-2 grid grid-cols-2 gap-3 text-xs">
-                  {[
-                    { icon: <Smile className="h-5 w-5 text-indigo-400" aria-hidden="true" />, label: "Mood", value: todayRecord?.mood },
-                    { icon: <Activity className="h-5 w-5 text-pink-400" aria-hidden="true" />, label: "Stress", value: `${todayRecord?.stress}/10` },
-                    { icon: <Clock className="h-5 w-5 text-blue-400" aria-hidden="true" />, label: "Sleep", value: todayRecord?.sleep },
-                    { icon: <Droplet className="h-5 w-5 text-cyan-400" aria-hidden="true" />, label: "Water", value: todayRecord?.water },
-                  ].map(({ icon, label, value }) => (
-                    <div key={label} className="bg-white/5 p-3 rounded-xl flex items-center space-x-2.5">
-                      {icon}
-                      <div>
-                        <div className="text-[10px] text-slate-500 font-bold uppercase">{label}</div>
-                        <div className="font-bold text-slate-200 truncate">{value}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {/* AI Summary */}
                 {todayRecord?.ai_summary && (
-                  <div className="md:col-span-3 rounded-xl border border-white/5 bg-slate-950/40 p-4 text-xs space-y-2">
-                    <div className="flex items-center space-x-1.5 font-bold text-indigo-400 uppercase tracking-wider">
-                      <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                      <span>Today&apos;s AI Insight</span>
-                    </div>
-                    <p className="text-slate-300 leading-relaxed italic">&ldquo;{todayRecord.ai_summary}&rdquo;</p>
-                    {todayRecord.daily_goal && (
-                      <p className="text-slate-400 font-semibold pt-1 border-t border-white/5">
-                        🎯 <span className="font-bold text-slate-300">Goal:</span> {todayRecord.daily_goal}
-                      </p>
-                    )}
+                  <div className="rounded-2xl bg-indigo-500/[0.03] border border-indigo-500/10 p-4 space-y-1">
+                    <p className="text-[9px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1">
+                      <Sparkles className="h-3 w-3" /> Today&apos;s AI Insights
+                    </p>
+                    <p className="text-xs text-slate-300 leading-relaxed italic">&ldquo;{todayRecord.ai_summary}&rdquo;</p>
                   </div>
                 )}
-
-                <div className="md:col-span-3 flex flex-col gap-3">
-                  <Link
-                    href="/daily-checkin"
-                    className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 border border-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                  >
-                    <span>View Report / Edit Check-In</span>
-                    <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-                  </Link>
-
-                  {reasoning && (
-                    <div className="w-full rounded-xl border border-white/5 bg-slate-950/40 p-4 text-xs space-y-3">
-                      <button
-                        onClick={() => setShowReasoning(!showReasoning)}
-                        className="w-full flex items-center justify-between text-indigo-400 hover:text-indigo-300 font-bold focus:outline-none transition-all"
-                        aria-expanded={showReasoning}
-                      >
-                        <span className="flex items-center gap-1.5 uppercase tracking-wider">
-                          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
-                          Why am I seeing this?
-                        </span>
-                        <span className="text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
-                          {showReasoning ? "Collapse" : "Expand"}
-                        </span>
-                      </button>
-
-                      {showReasoning && (
-                        <div className="pt-3 border-t border-white/5 space-y-3 text-slate-300 transition-all animate-fadeIn">
-                          <div>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Current Prediction</span>
-                            <p className="font-semibold text-slate-200 mt-0.5">{reasoning.prediction} (Confidence: {reasoning.confidence}%)</p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Evidence</span>
-                            <p className="mt-0.5">{reasoning.evidence}</p>
-                          </div>
-                          <div>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Reasoning & Analysis</span>
-                            <p className="mt-0.5 leading-relaxed">{reasoning.reasoning}</p>
-                          </div>
-                          
-                          <div>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Top Contributing Factors</span>
-
-                            <div className="space-y-1.5">
-                              {reasoning.contributing_factors?.map((f: ContributingFactor, i: number) => (
-                                <div key={i} className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-lg">
-                                  <span>{f.factor}</span>
-                                  <span className="font-bold text-indigo-300 text-[10px]">Weight: {f.importance}</span>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-                          <div>
-                            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Personalized Actions</span>
-                            <div className="space-y-1.5">
-                              {reasoning.action_plan?.map((a: ActionPlanItem, i: number) => (
-                                <div key={i} className="bg-white/5 p-2.5 rounded-lg space-y-1">
-                                  <div className="flex items-center justify-between">
-                                    <span className="font-bold text-slate-200">{a.title}</span>
-                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                                      Impact: {a.expected_impact}
-                                    </span>
-                                  </div>
-                                  <p className="text-[11px] text-slate-400">{a.description}</p>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-
-
-                          <div className="pt-2 border-t border-white/5 text-[9px] text-slate-500 italic space-y-1">
-                            <p>Data Sources Used: {reasoning.data_sources?.join(", ")}</p>
-                            <p>{reasoning.limitations}</p>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-
               </div>
             )}
           </div>
+        </div>
 
-          {/* Progress Comparison */}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl">
-            <div className="space-y-1">
-              <h3 className="text-base font-bold text-white">📈 Progress</h3>
-              <p className="text-xs text-slate-400 leading-relaxed">Compare your latest wellness scores.</p>
-            </div>
+        {/* ─── 3. AI Explainability Panel (Reasoning) ─── */}
+        {reasoning && (
+          <div className="glass-card rounded-3xl overflow-hidden border border-white/[0.04] shadow-lg">
+            <button
+              onClick={() => setShowReasoning(!showReasoning)}
+              className="w-full flex items-center justify-between px-6 py-4.5 text-left hover:bg-white/[0.01] transition-all focus:outline-none"
+              aria-expanded={showReasoning}
+            >
+              <div className="flex items-center gap-3.5">
+                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
+                  <Sparkles className="h-4.5 w-4.5" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-white">Why am I seeing this score?</p>
+                  <p className="text-[10px] text-slate-500 font-semibold mt-0.5">Granite AI reasoning layer · {reasoning.confidence}% confidence</p>
+                </div>
+              </div>
+              <span className={`text-[9px] font-bold px-2.5 py-1 rounded-xl border transition-all ${showReasoning ? "bg-indigo-500/10 text-indigo-300 border-indigo-500/20" : "bg-white/[0.04] text-slate-500 border-white/[0.05]"}`}>
+                {showReasoning ? "Collapse Details" : "View Breakdown"}
+              </span>
+            </button>
 
-            {loadingWellness ? (
-              <div className="space-y-3">
-                <SkeletonLine className="h-12 rounded-xl" />
-                <SkeletonLine className="h-8 rounded-xl" />
-                <SkeletonLine className="h-8 rounded-xl" />
-              </div>
-            ) : !progressMetrics ? (
-              <div className="rounded-xl bg-white/5 p-4 text-center text-xs text-slate-500">
-                Complete more daily check-ins to view progress trends.
-              </div>
-            ) : (
-              <div className="space-y-4 flex-1">
-                <div className="flex items-end justify-between">
-                  <div>
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Current</span>
-                    <span className="text-3xl font-black text-white">{progressMetrics.currentScore}%</span>
+            {showReasoning && (
+              <div className="border-t border-white/[0.04] px-6 pb-6 pt-5 space-y-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Calculated Prediction</p>
+                    <p className="text-xs font-bold text-slate-200 bg-white/[0.02] border border-white/[0.04] p-3 rounded-xl">{reasoning.prediction}</p>
                   </div>
-                  <div className="text-right">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">Previous</span>
-                    <span className="text-xl font-bold text-slate-400">{progressMetrics.previousScore}%</span>
+                  <div className="space-y-1.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Supporting Evidence</p>
+                    <p className="text-xs text-slate-300 leading-relaxed bg-white/[0.02] border border-white/[0.04] p-3 rounded-xl">{reasoning.evidence}</p>
                   </div>
                 </div>
 
-                <div className="space-y-2 text-xs">
-                  <div className="flex items-center justify-between py-1.5 border-b border-white/5">
-                    <span className="text-slate-400">Trend</span>
-                    {progressMetrics.trend === "improving" ? (
-                      <span className="flex items-center gap-1 rounded-full bg-emerald-500/10 px-2.5 py-0.5 font-bold text-emerald-400 border border-emerald-500/20">
-                        <TrendingUp className="h-3 w-3" /> ⬆ +{progressMetrics.diff}%
-                      </span>
-                    ) : progressMetrics.trend === "needs_attention" ? (
-                      <span className="flex items-center gap-1 rounded-full bg-rose-500/10 px-2.5 py-0.5 font-bold text-rose-400 border border-rose-500/20">
-                        <TrendingDown className="h-3 w-3" /> ⬇ -{progressMetrics.diff}%
-                      </span>
-                    ) : (
-                      <span className="rounded-full bg-slate-500/10 px-2.5 py-0.5 font-bold text-slate-400 border border-slate-500/20">
-                        ➡ Stable
-                      </span>
-                    )}
+                <div className="space-y-1.5">
+                  <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Inference Logic</p>
+                  <p className="text-xs text-slate-300 leading-relaxed bg-white/[0.02] border border-white/[0.04] p-4 rounded-xl">{reasoning.reasoning}</p>
+                </div>
+
+                {reasoning.contributing_factors && reasoning.contributing_factors.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Contributing factors weight</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {reasoning.contributing_factors.map((f: ContributingFactor, i: number) => (
+                        <div key={i} className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] px-3.5 py-2.5 rounded-xl">
+                          <span className="text-xs text-slate-300">{f.factor}</span>
+                          <span className="text-[9px] font-bold text-indigo-300 bg-indigo-500/10 px-2 py-0.5 rounded-full border border-indigo-500/20">{f.importance}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <div className="flex items-center justify-between py-1.5 border-b border-white/5">
-                    <span className="text-slate-400">Mood</span>
+                )}
+
+                {reasoning.action_plan && reasoning.action_plan.length > 0 && (
+                  <div className="space-y-2.5">
+                    <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">AI Suggested actionable next steps</p>
+                    <div className="space-y-2.5">
+                      {reasoning.action_plan.map((a: ActionPlanItem, i: number) => (
+                        <div key={i} className="bg-white/[0.02] border border-white/[0.04] p-3.5 rounded-2xl flex items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <p className="text-xs font-bold text-slate-200">{a.title}</p>
+                            <p className="text-[11px] text-slate-400 leading-relaxed">{a.description}</p>
+                          </div>
+                          <span className="text-[9px] px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold shrink-0">
+                            {a.expected_impact}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-4 text-[9px] text-slate-500 pt-2 border-t border-white/[0.04] italic">
+                  <span>Data Sources: {reasoning.data_sources?.join(", ") || "Telemetry"}</span>
+                  <span>Limitations: {reasoning.limitations || "Educational Coaching Only"}</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ─── 4. Trends Visualization (7 Days) ─── */}
+        {!loadingWellness && analyticsData.length > 0 && (
+          <div className="space-y-4">
+            <SectionHeader label="7-Day Wellness Trends" />
+            <div className="glass-card rounded-3xl p-5 border border-white/[0.04] shadow-md">
+              <AnalyticsCharts data={analyticsData} />
+            </div>
+          </div>
+        )}
+
+        {/* ─── 5. Highlights Grid (Mood, Goals, Review, Correlation) ─── */}
+        {!loadingWellness && (
+          <div className="space-y-4">
+            <SectionHeader label="Wellness highlights" />
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              
+              {/* Mood Journal */}
+              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-violet-400" aria-hidden="true" />
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Reflect journal</p>
+                  </div>
+                  {latestJournal ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[9px] text-slate-500 font-bold">
+                        <span>{latestJournal.date}</span>
+                        <span className="bg-violet-500/10 text-violet-400 border border-violet-500/20 px-1.5 py-0.5 rounded uppercase">
+                          {latestJournal.ai_analysis?.sentiment}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                        &ldquo;{latestJournal.ai_analysis?.summary}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-600 text-center py-4">No entries created yet.</p>
+                  )}
+                </div>
+                <Link href="/journal" className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <span>Open Journal</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* Goals */}
+              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Target className="h-4 w-4 text-rose-400" aria-hidden="true" />
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Active Goals</p>
+                  </div>
+                  {activeGoals.length > 0 ? (
+                    <div className="space-y-2">
+                      {activeGoals.slice(0, 3).map((goal) => (
+                        <div key={goal._id} className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] px-2.5 py-2 rounded-xl text-[10px]">
+                          <span className="truncate text-slate-300 pr-1">{goal.title}</span>
+                          <span className="text-[9px] text-rose-400 capitalize shrink-0 font-bold">{goal.frequency}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-600 text-center py-4">No active goals currently.</p>
+                  )}
+                </div>
+                <Link href="/goals" className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <span>Manage Goals</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* Monthly Review */}
+              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4 text-purple-400" aria-hidden="true" />
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Monthly Review</p>
+                  </div>
+                  {monthlyReview ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[9px] text-slate-500 font-bold">
+                        <span>Score: {monthlyReview.monthly_wellness_score}</span>
+                        <span>{monthlyReview.month}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 line-clamp-3 leading-relaxed">
+                        &ldquo;{monthlyReview.ai_summary}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-600 text-center py-4">No review details compiled.</p>
+                  )}
+                </div>
+                <Link href="/journey" className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <span>View Timeline</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+              {/* Correlations */}
+              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-indigo-400" aria-hidden="true" />
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">Correlations</p>
+                  </div>
+                  {correlations ? (
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-[9px] font-bold">
+                        <span className="text-slate-500 uppercase">Habit link</span>
+                        <span className="text-indigo-400 capitalize">{correlations.sleep_vs_stress?.strength}</span>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-normal line-clamp-3">
+                        {correlations.sleep_vs_stress?.explanation}
+                      </p>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-600 text-center py-4">Logs required for mapping.</p>
+                  )}
+                </div>
+                <Link href="/journey" className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <span>Compare Vitals</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+
+            </div>
+          </div>
+        )}
+
+        {/* ─── 6. Progress and Clinical Assessment ─── */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Progress Stats */}
+          <div className="glass-card rounded-3xl p-6 space-y-4">
+            <SectionHeader
+              label="Progress telemetry"
+              action={
+                <Link href="/daily-history" className="text-xs font-bold text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors">
+                  <span>Full History</span>
+                  <ChevronRight className="h-3 w-3" />
+                </Link>
+              }
+            />
+
+            {loadingWellness ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map((i) => <SkeletonLine key={i} className="h-12 rounded-2xl" />)}
+              </div>
+            ) : !progressMetrics ? (
+              <div className="text-center py-8 text-xs text-slate-500 leading-relaxed">
+                Add more daily check-ins to compute comparison graphs.
+              </div>
+            ) : (
+              <div className="space-y-5">
+                <div className="flex items-end justify-between border-b border-white/[0.04] pb-4">
+                  <div>
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Current Score</p>
+                    <p className="text-3xl font-black text-white mt-1">{progressMetrics.currentScore}%</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Previous Score</p>
+                    <p className="text-xl font-bold text-slate-500 mt-1">{progressMetrics.previousScore}%</p>
+                  </div>
+                </div>
+                <div className="space-y-3.5 text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Mood Level</span>
                     <TrendArrow trend={getMoodTrend(progressMetrics.currentMood, progressMetrics.previousMood)} />
                   </div>
-                  <div className="flex items-center justify-between py-1.5">
-                    <span className="text-slate-400">Stress</span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Stress Levels</span>
                     <TrendArrow trend={getTrend(progressMetrics.previousStress, progressMetrics.currentStress)} />
                   </div>
                 </div>
               </div>
             )}
+          </div>
+
+          {/* Latest Assessment */}
+          <div className="glass-card rounded-3xl p-6 space-y-4 flex flex-col justify-between">
+            <div>
+              <SectionHeader
+                label="Latest Clinical Assessment"
+                action={
+                  <Link href="/assessment" className="text-xs font-bold text-slate-500 hover:text-slate-300 flex items-center gap-1 transition-colors">
+                    <span>New Screening</span>
+                    <ChevronRight className="h-3 w-3" />
+                  </Link>
+                }
+              />
+
+              {loadingAssessments ? (
+                <SkeletonLine className="h-24 rounded-2xl animate-pulse" />
+              ) : !latestAssessment ? (
+                <div className="rounded-2xl bg-white/[0.02] border border-white/[0.04] p-4 text-center space-y-4">
+                  <p className="text-xs text-slate-500">No diagnostic screening logs found.</p>
+                  <Link href="/assessment" className="inline-flex">
+                    <button className="rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all border border-indigo-500/20 active:scale-95">
+                      Take Screening Now
+                    </button>
+                  </Link>
+                </div>
+              ) : (
+                <div className="space-y-3 pt-2">
+                  {[
+                    { label: "Completion Date", value: latestAssessment.metadata?.generated_at?.split("T")[0] || "Recent" },
+                    { label: "Overall Risk Level", value: latestAssessment.risk_profile?.overall_risk?.level || "Minimal" },
+                    { label: "Aggregated Clinical Score", value: `${Math.round(latestAssessment.risk_profile?.overall_risk?.score ?? 0)} / 100` },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="flex items-center justify-between py-2 border-b border-white/[0.04] text-xs">
+                      <span className="text-slate-400 font-medium">{label}</span>
+                      <span className="font-bold text-slate-200">{value}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Link
-              href="/daily-history"
-              className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
+              href={latestAssessment ? `/results/${latestAssessment.id}` : "/assessment"}
+              className="flex items-center justify-center gap-2 text-xs font-bold text-slate-300 bg-white/[0.03] border border-white/[0.05] hover:bg-white/[0.06] rounded-2xl py-3 transition-all active:scale-95 mt-4"
             >
-              View Full History
-              <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
+              <span>{latestAssessment ? "View Complete Assessment Report" : "Start Screening"}</span>
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
 
-        {/* ——— 3. Analytics Charts ——— */}
-        {!loadingWellness && analyticsData.length > 0 && (
-          <div className="w-full">
-            <AnalyticsCharts data={analyticsData} />
-          </div>
-        )}
-
-        {/* ——— 4. Latest Assessment + Streak ——— */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-          {/* Latest Assessment */}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl">
-            <div className="space-y-2">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <BookOpen className="h-5 w-5 text-indigo-400" aria-hidden="true" />
-                🧠 Latest Assessment
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Review your most recent PHQ-9 &amp; GAD-7 evaluation results.
-              </p>
-            </div>
-
-            {loadingAssessments ? (
-              <SkeletonLine className="h-24 rounded-xl" />
-            ) : !latestAssessment ? (
-              <div className="rounded-xl bg-white/5 p-4 text-center space-y-3">
-                <p className="text-xs text-slate-500">No assessments completed yet.</p>
-                <Link
-                  href="/assessment"
-                  className="inline-flex items-center rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all"
-                >
-                  Take First Assessment
-                </Link>
-              </div>
-            ) : (
-              <div className="space-y-3 border-t border-white/5 pt-3">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-semibold">Assessment Date</span>
-                  <span className="font-bold text-slate-200">
-                    {latestAssessment.metadata?.generated_at?.split("T")[0] || "Recent"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-semibold">Risk Level</span>
-                  <span className="font-bold text-indigo-300">
-                    {latestAssessment.risk_profile?.overall_risk?.level || "Minimal"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-slate-400 font-semibold">Score</span>
-                  <span className="font-bold text-slate-200">
-                    {Math.round(latestAssessment.risk_profile?.overall_risk?.score ?? 0)} / 100
-                  </span>
-                </div>
-              </div>
-            )}
-
-            <Link
-              href={latestAssessment ? `/results/${latestAssessment.id}` : "/assessment"}
-              className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2.5 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            >
-              {latestAssessment ? "View Full Report" : "Start Assessment"}
-              <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-
-          {/* Streak Widget */}
-          <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl">
-            <div className="space-y-2">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Flame className="h-5 w-5 text-amber-500" aria-hidden="true" />
-                🔥 Current Streak
-              </h3>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Build consistency to unlock streak milestones.
-              </p>
-            </div>
-
-            {loadingWellness ? (
-              <div className="grid grid-cols-3 gap-3">
-                {[1, 2, 3].map((i) => <SkeletonLine key={i} className="h-16 rounded-xl" />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-3 gap-3 text-center text-xs">
+        {/* ─── 7. Milestones & Achievements ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          
+          {/* Consistency Metrics */}
+          <div className="glass-card rounded-3xl p-6 space-y-5 lg:col-span-1 flex flex-col justify-between">
+            <div>
+              <SectionHeader label="Consistency stats" />
+              <div className="grid grid-cols-3 gap-3 text-center pt-2">
                 {[
-                  { label: "Current", value: streak.current_streak, unit: "days", color: "text-amber-400" },
-                  { label: "Longest", value: streak.longest_streak, unit: "days", color: "text-indigo-300" },
-                  { label: "Total", value: streak.total_checkins, unit: "logs", color: "text-emerald-300" },
+                  { label: "Current", value: streak.current_streak, unit: "days", color: "text-amber-400 bg-amber-500/5 border-amber-500/10" },
+                  { label: "Longest", value: streak.longest_streak, unit: "days", color: "text-indigo-400 bg-indigo-500/5 border-indigo-500/10" },
+                  { label: "Total Logs", value: streak.total_checkins, unit: "check-ins", color: "text-emerald-400 bg-emerald-500/5 border-emerald-500/10" },
                 ].map(({ label, value, unit, color }) => (
-                  <div key={label} className="bg-white/5 p-3 rounded-xl">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase block">{label}</span>
-                    <span className={`text-lg font-black ${color} block mt-0.5`}>{value}</span>
-                    <span className="text-[10px] text-slate-500">{unit}</span>
+                  <div key={label} className={`border rounded-2xl py-3.5 px-2 ${color} flex flex-col justify-center`}>
+                    <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
+                    <p className="text-xl font-black leading-none mt-2">{loadingWellness ? "—" : value}</p>
+                    <p className="text-[8px] text-slate-500 mt-1 font-semibold">{unit}</p>
                   </div>
                 ))}
               </div>
-            )}
+            </div>
 
-            <div className="flex flex-wrap gap-2 justify-center border-t border-white/5 pt-3">
+            <div className="flex flex-wrap gap-2 mt-4 pt-2 border-t border-white/[0.04]">
               {[
                 { label: "🥉 7 Days", threshold: 7 },
                 { label: "🥈 30 Days", threshold: 30 },
@@ -689,293 +802,121 @@ export default function DashboardPage() {
               ].map(({ label, threshold }) => (
                 <span
                   key={threshold}
-                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                  className={`text-[9px] font-bold px-2.5 py-1 rounded-full border ${
                     streak.total_checkins >= threshold
-                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20"
-                      : "bg-white/5 text-slate-600 border-white/5"
+                      ? "bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-sm"
+                      : "bg-white/[0.02] text-slate-600 border-white/[0.04]"
                   }`}
                 >
-                          {label}
+                  {label}
                 </span>
               ))}
             </div>
           </div>
-        </div>
 
-        {/* ——— 4.5. Phase 3: Personal Wellness Experience Integrations ——— */}
-
-        {!loadingWellness && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            
-            {/* Latest Journal Summary */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
-              <div className="space-y-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-purple-400" />
-                  📖 Latest Journal
-                </h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Reflect on daily logs with automatic sentiment extraction.
-                </p>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center">
-                {latestJournal ? (
-                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
-                    <div className="flex items-center justify-between text-[10px] text-slate-500">
-                      <span>{latestJournal.date}</span>
-                      <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded font-bold uppercase">
-                        {latestJournal.ai_analysis?.sentiment}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed italic">
-                      &ldquo;{latestJournal.ai_analysis?.summary}&rdquo;
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-slate-500 text-xs py-4 text-center">No journal entries written.</div>
-                )}
-              </div>
-
-              <Link
-                href="/journal"
-                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
-              >
-                Open Journal
-                <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </div>
-
-            {/* Active Goals Checklist */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
-              <div className="space-y-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Target className="h-4 w-4 text-pink-400" />
-                  🎯 Goal Checklist
-                </h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Track and complete your personal wellness milestones.
-                </p>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center">
-                {activeGoals.length > 0 ? (
-                  <div className="space-y-1.5 py-2 border-t border-white/5 mt-2 max-h-[100px] overflow-y-auto pr-1">
-                    {activeGoals.slice(0, 3).map((goal) => (
-                      <div key={goal._id} className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-lg text-[11px]">
-                        <span className="truncate text-slate-300 pr-1">{goal.title}</span>
-                        <span className="text-[9px] text-pink-400 capitalize shrink-0 font-bold">{goal.frequency}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-slate-500 text-xs py-4 text-center">No active goals. Set one!</div>
-                )}
-              </div>
-
-              <Link
-                href="/goals"
-                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
-              >
-                Manage Goals
-                <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </div>
-
-            {/* Monthly AI Review Preview */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
-              <div className="space-y-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
-                  ✨ Monthly AI Review
-                </h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Supportive monthly summaries and improvement insights.
-                </p>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center">
-                {monthlyReview ? (
-                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
-                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
-                      <span>Score: {monthlyReview.monthly_wellness_score}/100</span>
-                      <span>{monthlyReview.month}</span>
-                    </div>
-                    <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed italic">
-                      &ldquo;{monthlyReview.ai_summary}&rdquo;
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-slate-500 text-xs py-4 text-center">No monthly review compiled.</div>
-                )}
-              </div>
-
-              <Link
-                href="/journey"
-                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
-              >
-                View Journey
-                <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </div>
-
-            {/* Correlations Highlights */}
-            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
-              <div className="space-y-2">
-                <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-indigo-400 animate-pulse" />
-                  📈 Correlation Focus
-                </h3>
-                <p className="text-[11px] text-slate-400 leading-relaxed">
-                  Observed associations between sleep, activity, and stress.
-                </p>
-              </div>
-
-              <div className="flex-1 flex flex-col justify-center">
-                {correlations ? (
-                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
-                    <div className="flex items-center justify-between text-[9px]">
-                      <span className="font-bold text-slate-200 uppercase">Sleep vs Stress</span>
-                      <span className="text-indigo-400 capitalize">{correlations.sleep_vs_stress?.strength}</span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 leading-normal line-clamp-3 italic text-slate-400">
-                      {correlations.sleep_vs_stress?.explanation}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="text-slate-500 text-xs py-4 text-center">Complete check-ins to compute correlations.</div>
-                )}
-              </div>
-
-              <Link
-                href="/journey"
-                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
-              >
-                Compare Habits
-                <ChevronRight className="ml-1 h-3 w-3" />
-              </Link>
-            </div>
-
-          </div>
-        )}
-
-        {/* ——— 5. Achievements ——— */}
-
-        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl space-y-4">
-          <div className="flex items-center justify-between border-b border-white/5 pb-3">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Trophy className="h-5 w-5 text-yellow-400" aria-hidden="true" />
-              🏆 Achievements
-            </h3>
-            <span className="text-xs font-bold text-slate-400 bg-white/5 px-2.5 py-0.5 rounded-full border border-white/5">
-              {unlockedCount}/{achievements.length} Unlocked
-            </span>
-          </div>
-
-          {loadingWellness ? (
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => <SkeletonLine key={i} className="h-32 rounded-2xl" />)}
-            </div>
-          ) : achievements.every((a) => !a.unlocked) && streak.total_checkins === 0 ? (
-            <div className="text-center py-6 space-y-2">
-              <Trophy className="h-10 w-10 text-slate-600 mx-auto" aria-hidden="true" />
-              <p className="text-sm text-slate-400 font-semibold">No achievements yet</p>
-              <p className="text-xs text-slate-500">Complete daily check-ins to unlock your first achievement.</p>
-              <Link
-                href="/daily-checkin"
-                className="inline-flex items-center mt-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-bold text-white hover:bg-indigo-500 transition-all"
-              >
-                Start Today
-              </Link>
-            </div>
-          ) : (
-            <div
-              className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-              role="list"
-              aria-label="Achievements"
-            >
-              {achievements.map((achievement) => (
-                <AchievementBadge key={achievement.id} achievement={achievement} />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* ——— 6. Wellness Calendar ——— */}
-        {!loadingWellness && historyData.length > 0 && (
-          <div>
-            <WellnessCalendar
-              history={historyData}
-              onDayClick={(record) => setCalendarRecord(record)}
+          {/* Achievements badge grid */}
+          <div className="glass-card rounded-3xl p-6 lg:col-span-2 space-y-4">
+            <SectionHeader
+              label="Wellness Achievements"
+              action={
+                <span className="text-[10px] font-bold text-slate-500 bg-white/[0.04] border border-white/[0.05] px-2.5 py-0.5 rounded-full">
+                  {unlockedCount} / {achievements.length} Unlocked
+                </span>
+              }
             />
+
+            {loadingWellness ? (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => <SkeletonLine key={i} className="h-24 rounded-2xl" />)}
+              </div>
+            ) : achievements.every((a) => !a.unlocked) && streak.total_checkins === 0 ? (
+              <div className="flex flex-col items-center justify-center py-6 text-center space-y-3">
+                <Trophy className="h-8 w-8 text-slate-600" aria-hidden="true" />
+                <p className="text-xs text-slate-500">Unlocking achievements begins with your first daily check-in logs.</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3" role="list" aria-label="Achievements">
+                {achievements.map((achievement) => (
+                  <AchievementBadge key={achievement.id} achievement={achievement} />
+                ))}
+              </div>
+            )}
+          </div>
+
+        </div>
+
+        {/* ─── 8. Wellness Calendar (History data points) ─── */}
+        {!loadingWellness && historyData.length > 0 && (
+          <div className="space-y-4">
+            <SectionHeader label="Wellness Check-In Calendar" />
+            <div className="glass-card rounded-3xl p-6 border border-white/[0.04] shadow-md">
+              <WellnessCalendar
+                history={historyData}
+                onDayClick={(record) => setCalendarRecord(record)}
+              />
+            </div>
           </div>
         )}
 
-        {/* ——— 7. Quick Actions ——— */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 space-y-4 shadow-xl backdrop-blur-xl">
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider border-b border-white/5 pb-2">
-            ⚡ Quick Actions
-          </h3>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4" role="list">
+        {/* ─── 9. Quick Actions Grid ─── */}
+        <div className="space-y-4">
+          <SectionHeader label="Quick Actions" />
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { href: "/assessment", icon: <ClipboardList className="h-5 w-5 text-indigo-400" />, label: "Assessment", color: "hover:border-indigo-500/20" },
-              { href: "/daily-checkin", icon: <Heart className="h-5 w-5 text-pink-400" />, label: "Daily Check-In", color: "hover:border-pink-500/20" },
-              { href: "/history", icon: <History className="h-5 w-5 text-blue-400" />, label: "History", color: "hover:border-blue-500/20" },
-              { href: "/consult", icon: <Stethoscope className="h-5 w-5 text-emerald-400" />, label: "Consult", color: "hover:border-emerald-500/20" },
-            ].map(({ href, icon, label, color }) => (
+              { href: "/assessment", icon: <ClipboardList className="h-5 w-5 text-indigo-400" />, label: "Calibrate Assessment", accent: "hover:border-indigo-500/20 hover:bg-indigo-500/[0.02]" },
+              { href: "/daily-checkin", icon: <Heart className="h-5 w-5 text-rose-400" />, label: "New Daily Check-In", accent: "hover:border-rose-500/20 hover:bg-rose-500/[0.02]" },
+              { href: "/history", icon: <History className="h-5 w-5 text-blue-400" />, label: "Assessment History", accent: "hover:border-blue-500/20 hover:bg-blue-500/[0.02]" },
+              { href: "/consult", icon: <Stethoscope className="h-5 w-5 text-emerald-400" />, label: "Find Care Professional", accent: "hover:border-emerald-500/20 hover:bg-emerald-500/[0.02]" },
+            ].map(({ href, icon, label, accent }) => (
               <Link
                 key={href}
                 href={href}
-                role="listitem"
-                className={`flex flex-col items-center justify-center p-4 rounded-xl border border-white/5 bg-white/5 text-center transition-all duration-200 hover:bg-white/10 ${color} focus:outline-none focus:ring-2 focus:ring-indigo-500`}
-                aria-label={label}
+                className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] text-center transition-all duration-200 ${accent} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
               >
                 {icon}
-                <span className="mt-2 text-xs font-bold text-white">{label}</span>
+                <span className="text-xs font-bold text-slate-300">{label}</span>
               </Link>
             ))}
           </div>
         </div>
 
-        {/* ——— 8. Professional Support CTA ——— */}
-        <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shrink-0">
-                <Stethoscope className="h-6 w-6" aria-hidden="true" />
+        {/* ─── 10. Professional Therapist Support CTA ─── */}
+        <div className="glass-card rounded-3xl p-6 relative overflow-hidden">
+          <div className="absolute top-0 right-0 h-40 w-40 bg-emerald-500/5 blur-3xl rounded-full" />
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative z-10">
+            <div className="flex items-center gap-4">
+              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-md shrink-0">
+                <Stethoscope className="h-5 w-5 text-white" aria-hidden="true" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-white">Need Professional Support?</h3>
-                <p className="text-xs text-slate-400">Find licensed mental health professionals near you.</p>
+              <div className="space-y-1">
+                <p className="text-sm font-bold text-white">Need professional psychological support?</p>
+                <p className="text-xs text-slate-400">Search directory grids of local certified psychiatrists and therapists near your location.</p>
               </div>
             </div>
             <Link
               href="/consult"
-              className="shrink-0 rounded-xl bg-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-indigo-500 transition-all shadow-md shadow-indigo-500/15 inline-flex items-center gap-1.5 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+              className="shrink-0 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-5 py-3 text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95"
             >
-              Go to Consult
-              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+              <span>Consult Directory</span>
+              <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           </div>
         </div>
 
-        {/* ——— Disclaimer ——— */}
+        {/* ─── 11. Disclaimer Banner ─── */}
         <div
-          className="flex items-start space-x-3 rounded-2xl border border-white/5 bg-slate-950/40 p-5 text-xs text-slate-500"
+          className="flex items-start gap-3 rounded-2xl border border-white/[0.04] bg-slate-950/40 p-4 text-[10px] text-slate-500 leading-relaxed"
           role="note"
         >
-          <ShieldAlert className="h-5 w-5 shrink-0 text-slate-400" aria-hidden="true" />
-          <p className="leading-relaxed">
-            <strong>Disclaimer:</strong> MindCare AI assessments and daily tracking metrics are compiled for
-            self-coaching and educational purposes only. They do not constitute formal psychiatric advice
-            or clinical diagnosis. If you are experiencing a mental health emergency, please immediately
-            call emergency services or visit the nearest healthcare facility.
+          <ShieldAlert className="h-4 w-4 shrink-0 text-slate-500 mt-0.5" aria-hidden="true" />
+          <p>
+            <strong className="text-slate-400">Clinical Disclaimer:</strong> MindCare AI assessments are designed for educational self-coaching and lifestyle tracking only. They are not substitutes for formal psychiatric diagnosis, clinical evaluation, or emergency health consultation. If you are experiencing a mental health emergency, please immediately call your local emergency services (911 or equivalent).
           </p>
         </div>
 
       </div>
 
-      {/* Calendar Day Modal */}
+      {/* Calendar Day Details Modal */}
       {calendarRecord && (
         <DayReportModal record={calendarRecord} onClose={() => setCalendarRecord(null)} />
       )}

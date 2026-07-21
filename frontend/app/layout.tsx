@@ -1,20 +1,22 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import Navbar from "@/components/Navbar";
 import QueryProvider from "@/components/QueryProvider";
+import { AuthProvider } from "@/context/AuthContext";
+import AppShell from "@/components/AppShell";
 import "./globals.css";
 
 const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "MindCare AI - Intelligent Mental Health Copilot",
-  description: "Assess your psychological well-being with precision AI and secure, private insights.",
+  title: "MindCare AI – Intelligent Mental Wellness Copilot",
+  description:
+    "Assess your psychological well-being with precision AI and secure, private insights. Powered by IBM Watsonx Granite.",
+  keywords: ["mental health", "AI wellness", "mood tracking", "mental wellness"],
 };
-
-import { AuthProvider } from "@/context/AuthContext";
 
 export default function RootLayout({
   children,
@@ -24,17 +26,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full">
       <body
-        className={`${inter.variable} font-sans antialiased bg-slate-950 text-slate-100 min-h-full flex flex-col`}
+        className={`${inter.variable} font-sans antialiased h-full bg-[#030712] text-slate-100`}
       >
         <QueryProvider>
           <AuthProvider>
-            <Navbar />
-            <main className="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              {children}
-            </main>
-            <footer className="w-full border-t border-white/5 py-6 text-center text-xs text-slate-500 bg-slate-950">
-              &copy; {new Date().getFullYear()} MindCare AI. Powered by IBM Watsonx.ai Granite. All rights reserved.
-            </footer>
+            <AppShell>{children}</AppShell>
           </AuthProvider>
         </QueryProvider>
       </body>

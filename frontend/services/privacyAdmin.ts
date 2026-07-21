@@ -58,8 +58,8 @@ export const privacyAdminService = {
     return response.data;
   },
 
-  async exportData(): Promise<any> {
-    const response = await api.get<any>("/privacy/export");
+  async exportData(): Promise<Record<string, unknown>> {
+    const response = await api.get<Record<string, unknown>>("/privacy/export");
     return response.data;
   },
 

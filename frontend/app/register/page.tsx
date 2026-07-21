@@ -55,30 +55,34 @@ export default function RegisterPage() {
 
   return (
     <div className="flex min-h-[85vh] items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-      <div className="w-full max-w-lg space-y-8 rounded-2xl border border-white/10 bg-slate-900/50 p-8 shadow-2xl backdrop-blur-xl">
-        <div className="flex flex-col items-center justify-center text-center">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/20">
-            <UserPlus className="h-6 w-6" />
+      <div className="w-full max-w-lg space-y-8 rounded-3xl border border-white/[0.05] bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden">
+        
+        {/* Glow backdrop */}
+        <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/5 blur-3xl rounded-full" />
+
+        <div className="flex flex-col items-center justify-center text-center relative z-10">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-xl shadow-indigo-500/10">
+            <UserPlus className="h-5 w-5" />
           </div>
-          <h2 className="mt-6 text-3xl font-extrabold tracking-tight text-white">
+          <h2 className="mt-6 text-2xl font-extrabold tracking-tight text-white">
             Create Account
           </h2>
-          <p className="mt-2 text-sm text-slate-400">
+          <p className="mt-1.5 text-xs text-slate-400">
             Get started with MindCare AI in seconds
           </p>
         </div>
 
         {error && (
-          <div className="flex items-center space-x-2 rounded-xl bg-red-500/10 p-4 text-sm text-red-400 border border-red-500/20">
-            <AlertCircle className="h-5 w-5 shrink-0" />
+          <div className="flex items-center space-x-2.5 rounded-2xl bg-red-500/10 p-4 text-xs text-red-400 border border-red-500/20 relative z-10 animate-fadeIn">
+            <AlertCircle className="h-4.5 w-4.5 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        <form className="mt-8 space-y-4" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-4 relative z-10" onSubmit={handleSubmit}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-              <label htmlFor="full_name" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="full_name" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Full Name *
               </label>
               <input
@@ -88,13 +92,13 @@ export default function RegisterPage() {
                 required
                 value={formData.full_name}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                 placeholder="John Doe"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="email" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="email" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Email Address *
               </label>
               <input
@@ -104,13 +108,13 @@ export default function RegisterPage() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                 placeholder="you@example.com"
               />
             </div>
 
             <div className="sm:col-span-2">
-              <label htmlFor="password" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="password" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Password * (minimum 8 characters)
               </label>
               <input
@@ -121,13 +125,13 @@ export default function RegisterPage() {
                 minLength={8}
                 value={formData.password}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                 placeholder="••••••••"
               />
             </div>
 
             <div>
-              <label htmlFor="role" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="role" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Account Type *
               </label>
               <select
@@ -135,7 +139,7 @@ export default function RegisterPage() {
                 name="role"
                 value={formData.role}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
               >
                 <option value="patient">Patient</option>
                 <option value="doctor">Doctor</option>
@@ -144,7 +148,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="age" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="age" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Age
               </label>
               <input
@@ -155,13 +159,13 @@ export default function RegisterPage() {
                 max={120}
                 value={formData.age}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                 placeholder="e.g. 25"
               />
             </div>
 
             <div>
-              <label htmlFor="gender" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="gender" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Gender
               </label>
               <select
@@ -169,7 +173,7 @@ export default function RegisterPage() {
                 name="gender"
                 value={formData.gender}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
               >
                 <option value="">Select Gender</option>
                 <option value="male">Male</option>
@@ -180,7 +184,7 @@ export default function RegisterPage() {
             </div>
 
             <div>
-              <label htmlFor="phone" className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+              <label htmlFor="phone" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                 Phone Number
               </label>
               <input
@@ -189,7 +193,7 @@ export default function RegisterPage() {
                 type="tel"
                 value={formData.phone}
                 onChange={handleChange}
-                className="mt-1 block w-full rounded-xl border border-white/10 bg-slate-950 px-4 py-2.5 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 sm:text-sm transition-all duration-300"
+                className="mt-1.5 block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-2.5 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all duration-200"
                 placeholder="+1 (555) 000-0000"
               />
             </div>
@@ -199,10 +203,10 @@ export default function RegisterPage() {
             <button
               type="submit"
               disabled={loading}
-              className="group relative flex w-full justify-center rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-4 py-3.5 text-sm font-semibold text-white hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-950 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-lg shadow-indigo-500/20"
+              className="group relative flex w-full justify-center rounded-2xl bg-indigo-600 hover:bg-indigo-500 border border-indigo-500/30 px-4 py-3.5 text-xs font-bold text-white disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 shadow-md shadow-indigo-500/10 active:scale-[0.98]"
             >
               {loading ? (
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               ) : (
                 "Create Account"
               )}
@@ -210,11 +214,11 @@ export default function RegisterPage() {
           </div>
         </form>
 
-        <div className="text-center text-sm">
+        <div className="text-center text-xs relative z-10">
           <span className="text-slate-400">Already have an account? </span>
           <Link
             href="/login"
-            className="font-semibold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
+            className="font-bold text-indigo-400 hover:text-indigo-300 transition-colors duration-200"
           >
             Sign in
           </Link>

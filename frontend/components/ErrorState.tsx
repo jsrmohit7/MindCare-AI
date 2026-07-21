@@ -13,15 +13,15 @@ export default function ErrorState({
   onRetry,
 }: ErrorStateProps) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-rose-500/20 bg-rose-950/20 p-8 text-center backdrop-blur-sm max-w-md mx-auto my-6">
-      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-rose-500/10 text-rose-400">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-rose-500/15 bg-rose-950/10 p-8 text-center backdrop-blur-xl max-w-md mx-auto my-6">
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-500/10 text-rose-400 mb-5 border border-rose-500/20 shadow-[0_0_15px_rgba(244,63,94,0.1)]">
         <AlertCircle className="h-6 w-6" />
       </div>
-      <h3 className="mt-4 text-lg font-bold text-slate-100">{title}</h3>
-      <p className="mt-2 text-sm leading-relaxed text-slate-400">{message}</p>
+      <h3 className="text-base font-bold text-white">{title}</h3>
+      <p className="mt-2 text-xs leading-relaxed text-slate-400">{message}</p>
       {onRetry && (
-        <Button variant="secondary" className="mt-6 border-rose-500/20 hover:bg-rose-500/10" onClick={onRetry}>
-          <RefreshCw className="mr-2 h-4 w-4" />
+        <Button variant="secondary" size="sm" className="mt-6 border-rose-500/25 hover:bg-rose-500/10 hover:text-white" onClick={onRetry}>
+          <RefreshCw className="mr-1.5 h-3.5 w-3.5 animate-spin-hover" />
           <span>Try Again</span>
         </Button>
       )}
