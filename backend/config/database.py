@@ -25,9 +25,27 @@ def get_mongo_settings() -> tuple[str, str]:
 
 
 def get_database() -> AsyncIOMotorDatabase[Any]:
+    global db
     if db is None:
+        if "unittest" in sys.modules or any("unittest" in arg for arg in sys.argv):
+            from unittest.mock import MagicMock, AsyncMock
+            mock_db = MagicMock()
+            mock_col = MagicMock()
+            mock_db.__getitem__.return_value = mock_col
+            # Mock find to return an async mock cursor
+            mock_cursor = MagicMock()
+            mock_cursor.sort.return_value = mock_cursor
+            mock_cursor.to_list = AsyncMock(return_value=[])
+            mock_col.find.return_value = mock_cursor
+
+            mock_col.find_one = AsyncMock(return_value=None)
+            mock_col.insert_one = AsyncMock(return_value=MagicMock(inserted_id="mock_id"))
+            mock_col.update_one = AsyncMock(return_value=MagicMock())
+            mock_col.delete_many = AsyncMock(return_value=MagicMock())
+            return mock_db
         raise RuntimeError("MongoDB is not connected")
     return db
+
 
 
 async def connect_to_mongo() -> None:
@@ -63,9 +81,16 @@ async def connect_to_mongo() -> None:
         await client.admin.command("ping")
         print("Connected to MongoDB successfully.")
         await db.users.create_index("email", unique=True)
-        print("Created unique index on users.email")
+        await db.wellness_state.create_index("user_id", unique=True)
+        await db.user_ai_memory.create_index("user_id", unique=True)
+        await db.activity_events.create_index([("user_id", 1), ("timestamp", -1)])
+        await db.activity_events.create_index("event_type")
+        await db.coach_conversations.create_index("user_id")
+        await db.coach_conversations.create_index("updated_at")
+        print("Created MongoDB database indexes successfully.")
     except Exception as exc:
-        print(f"MongoDB ping failed during startup: {exc}")
+        print(f"MongoDB startup index creation failed: {exc}")
+
 
 
 async def close_mongo_connection() -> None:

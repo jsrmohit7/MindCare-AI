@@ -4,10 +4,13 @@ from bson import ObjectId
 
 from models.request_models import AssessmentRequest
 from models.response_models import AssessmentResponse, AssessmentListResponse
-from api.dependencies import get_assessment_service
+from api.dependencies import get_assessment_service, get_activity_repository, get_wellness_state_repository
+from repositories.activity_repository import ActivityRepository
+from repositories.wellness_state_repository import WellnessStateRepository
 from services.assessment_service import AssessmentService
 from services.response_validator import GraniteValidationError
 from services.auth import get_current_user
+
 
 router = APIRouter(
     prefix="/assessments",
@@ -48,12 +51,30 @@ def assessment_health() -> Dict[str, str]:
 async def create_assessment(
     request: AssessmentRequest,
     current_user: dict = Depends(get_current_user),
-    assessment_service: AssessmentService = Depends(get_assessment_service)
+    assessment_service: AssessmentService = Depends(get_assessment_service),
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    state_repo: WellnessStateRepository = Depends(get_wellness_state_repository)
 ) -> Dict[str, Any]:
     try:
         answers = request.model_dump()
         user_id = str(current_user["_id"])
-        return await assessment_service.create_assessment(answers, user_id)
+        res = await assessment_service.create_assessment(answers, user_id)
+        
+        # Log Activity Event
+        await activity_repo.log_event(
+            user_id=user_id,
+            source_collection="assessments",
+            event_type="assessment",
+            title="Assessment Completed",
+            description=f"Completed mental health screening assessment.",
+            metadata={"assessment_id": res.get("id")}
+        )
+        
+        # Set cache to dirty
+        await state_repo.set_dirty(user_id, True)
+        
+        return res
+
     except GraniteValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

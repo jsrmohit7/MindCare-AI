@@ -3,23 +3,35 @@ from datetime import datetime, date
 from repositories.coach_repository import CoachRepository
 from repositories.assessment_repository import AssessmentRepository
 from repositories.daily_wellness_repository import DailyWellnessRepository
+from repositories.coach_memory_repository import MemoryRepository
+from repositories.activity_repository import ActivityRepository
 from services.daily_wellness_service import DailyWellnessService
-from services.granite_service import GraniteService
+from services.ai_orchestrator import AIOrchestrator
+from tasks.ai_memory_task import update_user_memory_task
 
 class CoachService:
+    """
+    Service coordinating AI Coach logic, including prompt context compiling,
+    AI memory retrieval, activity logging, and cognitive profile updating.
+    """
+
     def __init__(
         self,
         coach_repo: CoachRepository,
         assessment_repo: AssessmentRepository,
         wellness_repo: DailyWellnessRepository,
         wellness_service: DailyWellnessService,
-        granite_service: GraniteService
+        granite_service: AIOrchestrator,
+        memory_repo: MemoryRepository,
+        activity_repo: ActivityRepository
     ) -> None:
         self.coach_repo = coach_repo
         self.assessment_repo = assessment_repo
         self.wellness_repo = wellness_repo
         self.wellness_service = wellness_service
         self.granite_service = granite_service
+        self.memory_repo = memory_repo
+        self.activity_repo = activity_repo
 
     async def get_user_wellness_context(self, user_id: str) -> str:
         """Compiles historical assessments, daily wellness records, and progress trends into a textual context."""
@@ -58,7 +70,6 @@ class CoachService:
         moods = [c.get("mood") for c in checkins if c.get("mood")]
         stresses = [c.get("stress") for c in checkins if c.get("stress") is not None]
         anxieties = [c.get("anxiety") for c in checkins if c.get("anxiety") is not None]
-        sleeps = [c.get("sleep") for c in checkins if c.get("sleep")]
         exercise_count = sum(1 for c in checkins if c.get("exercise"))
         
         avg_stress = sum(stresses) / len(stresses) if stresses else "N/A"
@@ -95,6 +106,14 @@ class CoachService:
 
         achievements_str = "\n".join(achievements) if achievements else "No achievements unlocked yet."
 
+        # Fetch AI Memory State
+        memory = await self.memory_repo.get_memory(user_id)
+        stressors = ", ".join(memory.get("known_stressors", [])) or "None identified"
+        habits = ", ".join(memory.get("helpful_habits", [])) or "None identified"
+        goals = ", ".join(memory.get("goals", [])) or "None identified"
+        encouragement = memory.get("encouragement_style", "gentle validation")
+        comm_style = memory.get("communication_style", "supportive and conversational")
+
         context = f"""[USER PROFILE & CLINICAL DATA]
 Latest Assessment: {latest_assessment_str}
 Assessment History:
@@ -121,6 +140,13 @@ Recent AI Daily Insights:
 
 Recent Wellness Notes/Journal Entries:
 {notes_str}
+
+[AI COGNITIVE MEMORY]
+- Known Stressors: {stressors}
+- Helpful Habits: {habits}
+- Important Goals: {goals}
+- Communication Preference: {comm_style}
+- Encouragement Style: {encouragement}
 """
         return context
 
@@ -130,7 +156,7 @@ You are chatting with {user_name}.
 Your goal is to help the user reflect on their wellness journey, understand their progress, and support healthy habits.
 
 CRITICAL INSTRUCTIONS:
-1. Base your guidance and advice on the user's historical wellness data provided in the CONTEXT. Be highly context-aware: acknowledge their streaks, recent check-ins, mood/stress trends, and assessment scores.
+1. Base your guidance and advice on the user's historical wellness data and AI memory provided in the CONTEXT. Be highly context-aware: acknowledge their streaks, recent check-ins, stressors, goals, and assessment scores.
 2. DO NOT make medical diagnoses or claim clinical certainty. You are a wellness coach, not a therapist or physician.
 3. Encourage professional help when appropriate (e.g. if the user exhibits severe risk scores or asks for clinical advice).
 4. If the conversation suggests serious distress, self-harm, or emergency, you must immediately encourage the user to contact trusted friends, family, or professional emergency services (e.g., suicide helplines), and clearly remind them that you are an AI companion, not a replacement for professional care.
@@ -140,7 +166,14 @@ CONTEXT DATA FOR {user_name}:
 {context}
 """
 
-    async def generate_response(self, user_id: str, user_name: str, conversation_id: str, user_message: str) -> str:
+    async def generate_response(
+        self,
+        user_id: str,
+        user_name: str,
+        conversation_id: str,
+        user_message: str,
+        background_tasks: Optional[Any] = None
+    ) -> str:
         # 1. Fetch conversation
         conv = await self.coach_repo.get_conversation(user_id, conversation_id)
         if not conv:
@@ -158,13 +191,11 @@ CONTEXT DATA FOR {user_name}:
         context = await self.get_user_wellness_context(user_id)
         system_prompt = self.build_system_prompt(user_name, context)
 
-        # 4. Generate response from Granite
+        # 4. Generate response from Granite (via AIOrchestrator)
         try:
-            # We only send recent message history (e.g. last 10 messages) to avoid token limits
             recent_history = messages[-10:]
             ai_text = self.granite_service.generate_chat_response(system_prompt, recent_history)
         except Exception as e:
-            # Fallback response in case AI fails
             ai_text = "I'm here to support you. It looks like I had a temporary connection issue. How can I help you reflect on your wellness today?"
 
         # 5. Append assistant message to history
@@ -176,5 +207,36 @@ CONTEXT DATA FOR {user_name}:
 
         # 6. Save updated messages to MongoDB
         await self.coach_repo.update_messages(user_id, conversation_id, messages)
+
+        # 7. Log Activity Event
+        await self.activity_repo.log_event(
+            user_id=user_id,
+            source_collection="coach_conversations",
+            event_type="coach_chat",
+            title="Chatted with AI Coach",
+            description=f"Sent a message to AI Coach in chat: '{conv.get('title')}'",
+            metadata={"conversation_id": conversation_id}
+        )
+
+        # 8. Trigger AI memory update background task
+        if background_tasks:
+            background_tasks.add_task(
+                update_user_memory_task,
+                user_id=user_id,
+                messages=messages,
+                memory_repo=self.memory_repo,
+                ai_orchestrator=self.granite_service
+            )
+        else:
+            # Fallback inline execution if no background_tasks queue is passed
+            import asyncio
+            asyncio.create_task(
+                update_user_memory_task(
+                    user_id=user_id,
+                    messages=messages,
+                    memory_repo=self.memory_repo,
+                    ai_orchestrator=self.granite_service
+                )
+            )
 
         return ai_text

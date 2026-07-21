@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from typing import List, Optional
 from services.auth import get_current_user
 from api.dependencies import get_coach_repository, get_coach_service
@@ -85,6 +85,7 @@ async def delete_conversation(
 async def chat_message(
     conversation_id: str,
     payload: ChatRequest,
+    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     service: CoachService = Depends(get_coach_service)
 ):
@@ -96,7 +97,8 @@ async def chat_message(
             user_id=user_id,
             user_name=user_name,
             conversation_id=conversation_id,
-            user_message=payload.message
+            user_message=payload.message,
+            background_tasks=background_tasks
         )
         return ChatResponse(
             response=response_text,
@@ -112,3 +114,4 @@ async def chat_message(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"An error occurred while generating AI response: {e}"
         )
+

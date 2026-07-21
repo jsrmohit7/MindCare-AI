@@ -31,6 +31,8 @@ import Link from "next/link";
 import { dailyWellnessService, DailyCheckInRecord } from "@/services/dailyWellness";
 import { SkeletonLine } from "@/components/SkeletonCard";
 import AchievementBadge, { computeAchievements } from "@/components/AchievementBadge";
+import { dashboardService, DashboardState } from "@/services/dashboard";
+
 
 // Lazy load heavy components
 const AnalyticsCharts = dynamic(
@@ -179,6 +181,7 @@ export default function DashboardPage() {
   const [streak, setStreak] = useState({ current_streak: 0, longest_streak: 0, total_checkins: 0 });
   const [analyticsData, setAnalyticsData] = useState<DailyCheckInRecord[]>([]);
   const [historyData, setHistoryData] = useState<DailyCheckInRecord[]>([]);
+  const [dashboardState, setDashboardState] = useState<DashboardState | null>(null);
   const [loadingWellness, setLoadingWellness] = useState(true);
   const [calendarRecord, setCalendarRecord] = useState<DailyCheckInRecord | null>(null);
 
@@ -188,23 +191,26 @@ export default function DashboardPage() {
 
   const loadWellnessDashboard = async () => {
     try {
-      const [todayRes, streakRes, analyticsRes, historyRes] = await Promise.all([
+      const [todayRes, streakRes, analyticsRes, historyRes, stateRes] = await Promise.all([
         dailyWellnessService.getTodayCheckIn(),
         dailyWellnessService.getStreak(),
         dailyWellnessService.getAnalytics(),
         dailyWellnessService.getHistory(),
+        dashboardService.getDashboardState()
       ]);
       setTodayCheckedIn(todayRes.checked_in);
       setTodayRecord(todayRes.data);
       setStreak(streakRes);
       setAnalyticsData(analyticsRes);
       setHistoryData(historyRes);
+      setDashboardState(stateRes);
     } catch (e) {
       console.error("Failed to load wellness dashboard metrics:", e);
     } finally {
       setLoadingWellness(false);
     }
   };
+
 
   // Progress comparison metrics (current vs previous check-in)
   const progressMetrics = useMemo(() => {
@@ -336,9 +342,12 @@ export default function DashboardPage() {
                   <div className="relative flex h-28 w-28 items-center justify-center rounded-full border-4 border-white/5 bg-slate-950 shadow-inner">
                     <div className="absolute inset-0 rounded-full border-4 border-indigo-500/40 animate-pulse" aria-hidden="true" />
                     <div className="text-center">
-                      <span className="text-3xl font-black text-indigo-300">{todayRecord?.wellness_score}</span>
+                      <span className="text-3xl font-black text-indigo-300">
+                        {dashboardState?.wellness_score ?? todayRecord?.wellness_score}
+                      </span>
                       <span className="text-[10px] text-slate-500 font-bold block">Score</span>
                     </div>
+
                   </div>
                   <span className="text-xs text-slate-400 font-semibold">Today&apos;s Balance</span>
                 </div>

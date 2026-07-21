@@ -9,7 +9,15 @@ from schemas.daily_wellness import DailyCheckInRequest
 from repositories.daily_wellness_repository import DailyWellnessRepository
 from services.daily_wellness_service import DailyWellnessService
 from services.pdf_generator import MonthlyPDFGenerator
-from api.dependencies import get_daily_wellness_repository, get_daily_wellness_service
+from api.dependencies import (
+    get_daily_wellness_repository,
+    get_daily_wellness_service,
+    get_activity_repository,
+    get_wellness_state_repository
+)
+from repositories.activity_repository import ActivityRepository
+from repositories.wellness_state_repository import WellnessStateRepository
+
 
 router = APIRouter(tags=["Daily Wellness"])
 
@@ -18,12 +26,14 @@ async def create_daily_checkin(
     payload: DailyCheckInRequest,
     current_user: dict = Depends(get_current_user),
     repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
-    service: DailyWellnessService = Depends(get_daily_wellness_service)
+    service: DailyWellnessService = Depends(get_daily_wellness_service),
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    state_repo: WellnessStateRepository = Depends(get_wellness_state_repository)
 ) -> dict:
     user_id = str(current_user["_id"])
     date_str = datetime.utcnow().strftime("%Y-%m-%d")
 
-    # Check duplicate checkin
+    # Verify if already checked in today
     existing = await repo.get_checkin_by_date(user_id, date_str)
     if existing:
         raise HTTPException(
@@ -50,7 +60,22 @@ async def create_daily_checkin(
     }
 
     doc_id = await repo.save_or_update_checkin(user_id, date_str, document)
+
+    # Log Activity Event
+    await activity_repo.log_event(
+        user_id=user_id,
+        source_collection="daily_wellness",
+        event_type="checkin",
+        title="Wellness Check-In Completed",
+        description=f"Completed daily check-in. Mood: {payload.mood}, Score: {score}",
+        metadata={"checkin_id": doc_id, "wellness_score": score}
+    )
+
+    # Mark cached state dirty
+    await state_repo.set_dirty(user_id, True)
+
     return {"id": doc_id, "wellness_score": score, **ai_report}
+
 
 @router.get("/daily-checkin/today")
 async def get_today_checkin(
@@ -70,7 +95,9 @@ async def update_today_checkin(
     payload: DailyCheckInRequest,
     current_user: dict = Depends(get_current_user),
     repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
-    service: DailyWellnessService = Depends(get_daily_wellness_service)
+    service: DailyWellnessService = Depends(get_daily_wellness_service),
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    state_repo: WellnessStateRepository = Depends(get_wellness_state_repository)
 ) -> dict:
     user_id = str(current_user["_id"])
     date_str = datetime.utcnow().strftime("%Y-%m-%d")
@@ -102,7 +129,22 @@ async def update_today_checkin(
     }
 
     await repo.save_or_update_checkin(user_id, date_str, document)
+
+    # Log Activity Event
+    await activity_repo.log_event(
+        user_id=user_id,
+        source_collection="daily_wellness",
+        event_type="checkin",
+        title="Wellness Check-In Updated",
+        description=f"Updated today's daily check-in. Mood: {payload.mood}, Score: {score}",
+        metadata={"checkin_id": existing["_id"], "wellness_score": score}
+    )
+
+    # Mark cached state dirty
+    await state_repo.set_dirty(user_id, True)
+
     return {"wellness_score": score, **ai_report}
+
 
 @router.get("/daily-checkin/history")
 async def get_checkin_history(
