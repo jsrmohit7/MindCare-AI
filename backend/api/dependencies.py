@@ -11,6 +11,8 @@ from repositories.wellness_state_repository import WellnessStateRepository
 from repositories.journal_repository import JournalRepository
 from repositories.goal_repository import GoalRepository
 from repositories.monthly_review_repository import MonthlyReviewRepository
+from repositories.audit_log_repository import AuditLogRepository
+from repositories.job_repository import JobRepository
 
 def get_assessment_repository(db=Depends(get_database)) -> AssessmentRepository:
     return AssessmentRepository(db)
@@ -39,6 +41,12 @@ def get_goal_repository(db=Depends(get_database)) -> GoalRepository:
 def get_monthly_review_repository(db=Depends(get_database)) -> MonthlyReviewRepository:
     return MonthlyReviewRepository(db)
 
+def get_audit_log_repository(db=Depends(get_database)) -> AuditLogRepository:
+    return AuditLogRepository(db)
+
+def get_job_repository(db=Depends(get_database)) -> JobRepository:
+    return JobRepository(db)
+
 
 # 2. Engines & Services
 from services.ai_orchestrator import AIOrchestrator
@@ -54,6 +62,9 @@ from services.coach_service import CoachService
 from services.journal_service import JournalService
 from services.goal_service import GoalService
 from services.monthly_review_service import MonthlyReviewService
+from services.privacy_service import PrivacyService
+from services.export_service import ExportService
+from services.admin_service import AdminService
 from services.prompt_builder import build_prompt
 from services.response_validator import ResponseValidator
 import services.risk_engine as risk_engine
@@ -133,7 +144,6 @@ def get_coach_service(
         review_repo=review_repo
     )
 
-
 def get_journal_service(
     journal_repo: JournalRepository = Depends(get_journal_repository),
     memory_repo: MemoryRepository = Depends(get_memory_repository),
@@ -167,3 +177,54 @@ def get_monthly_review_service(
         wellness_engine=wellness_engine,
         ai_orchestrator=ai_orchestrator
     )
+
+def get_privacy_service(
+    journal_repo: JournalRepository = Depends(get_journal_repository),
+    goal_repo: GoalRepository = Depends(get_goal_repository),
+    coach_repo: CoachRepository = Depends(get_coach_repository),
+    assessment_repo: AssessmentRepository = Depends(get_assessment_repository),
+    wellness_repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
+    memory_repo: MemoryRepository = Depends(get_memory_repository),
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+    db=Depends(get_database)
+) -> PrivacyService:
+    return PrivacyService(
+        journal_repo=journal_repo,
+        goal_repo=goal_repo,
+        coach_repo=coach_repo,
+        assessment_repo=assessment_repo,
+        wellness_repo=wellness_repo,
+        memory_repo=memory_repo,
+        activity_repo=activity_repo,
+        audit_repo=audit_repo,
+        db=db
+    )
+
+def get_export_service(
+    journal_repo: JournalRepository = Depends(get_journal_repository),
+    goal_repo: GoalRepository = Depends(get_goal_repository),
+    coach_repo: CoachRepository = Depends(get_coach_repository),
+    assessment_repo: AssessmentRepository = Depends(get_assessment_repository),
+    wellness_repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
+    review_repo: MonthlyReviewRepository = Depends(get_monthly_review_repository),
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository)
+) -> ExportService:
+    return ExportService(
+        journal_repo=journal_repo,
+        goal_repo=goal_repo,
+        coach_repo=coach_repo,
+        assessment_repo=assessment_repo,
+        wellness_repo=wellness_repo,
+        review_repo=review_repo,
+        activity_repo=activity_repo,
+        audit_repo=audit_repo
+    )
+
+def get_admin_service(
+    audit_repo: AuditLogRepository = Depends(get_audit_log_repository),
+    job_repo: JobRepository = Depends(get_job_repository),
+    db=Depends(get_database)
+) -> AdminService:
+    return AdminService(audit_repo, job_repo, db)

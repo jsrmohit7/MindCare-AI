@@ -1,0 +1,52 @@
+name: MindCare AI X CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Backend Unit Tests
+        env:
+          MONGODB_URL: mongodb://localhost:27017/test_db
+          MONGODB_DB: test_db
+          JWT_SECRET_KEY: test_secret_key_1234567890_test_secret_key
+        run: |
+          cd backend
+          source venv/bin/activate
+          python -m unittest discover -s tests -p "test_*.py"
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Install dependencies & Build Production Bundle
+        run: |
+          cd frontend
+          npm install
+          npm run build

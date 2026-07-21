@@ -25,6 +25,9 @@ from api.goal_routes import router as goal_router
 from api.journey_routes import router as journey_router
 from api.monthly_review_routes import router as monthly_review_router
 from api.correlation_routes import router as correlation_router
+from api.privacy_routes import router as privacy_router
+from api.admin_routes import router as admin_router
+
 
 
 
@@ -132,6 +135,11 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(monthly_review_router, prefix="/api/v1")
     # Correlations Prefix: /api/v1
     fastapi_app.include_router(correlation_router, prefix="/api/v1")
+    # Privacy Center Prefix: /api/v1
+    fastapi_app.include_router(privacy_router, prefix="/api/v1")
+    # Admin Panel Prefix: /api/v1
+    fastapi_app.include_router(admin_router, prefix="/api/v1")
+
 
 
 

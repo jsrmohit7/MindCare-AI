@@ -3,35 +3,61 @@ version: '3.8'
 services:
   mongodb:
     image: mongo:6.0
-    container_name: mindcare_mongodb_dev
+    container_name: mindcare_mongodb
     restart: always
     ports:
       - "27017:27017"
     environment:
       - MONGO_INITDB_DATABASE=mindcare_ai
     volumes:
-      - mongodb_dev_data:/data/db
+      - mongodb_data:/data/db
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - mindcare_network
 
-  mongo-express:
-    image: mongo-express:latest
-    container_name: mindcare_mongo_express_dev
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: mindcare_backend
     restart: always
     ports:
-      - "8081:8081"
+      - "8000:8000"
     environment:
-      - ME_CONFIG_MONGODB_SERVER=mongodb
-      - ME_CONFIG_MONGODB_PORT=27017
-      - ME_CONFIG_BASICAUTH_USERNAME=admin
-      - ME_CONFIG_BASICAUTH_PASSWORD=pass
+      - MONGODB_URL=mongodb://mongodb:27017/mindcare_ai
+      - MONGODB_DB=mindcare_ai
+      - JWT_SECRET_KEY=dev_secret_key_1234567890_dev_secret_key
+      - IBM_WATSONX_APIKEY=mock_key
+      - IBM_WATSONX_PROJECT_ID=mock_project_id
     depends_on:
       mongodb:
         condition: service_healthy
+    networks:
+      - mindcare_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: mindcare_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    networks:
+      - mindcare_network
 
 volumes:
-  mongodb_dev_data:
+  mongodb_data:
     driver: local
+
+networks:
+  mindcare_network:
+    driver: bridge

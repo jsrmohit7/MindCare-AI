@@ -20,7 +20,9 @@ import {
   Bot,
   BookOpen,
   Target,
-  Compass
+  Compass,
+  Settings,
+  ShieldAlert
 } from "lucide-react";
 
 export default function Navbar() {
@@ -44,7 +46,13 @@ export default function Navbar() {
     { name: "Journey Timeline", path: "/journey", icon: Compass },
     { name: "Consult", path: "/consult", icon: Stethoscope },
     { name: "Profile", path: "/profile", icon: User },
+    // Only if admin
+    ...(user?.role === "admin" || (user?.email && user.email.includes("admin")) ? [
+      { name: "Admin Panel", path: "/admin", icon: Settings }
+    ] : []),
+    { name: "Privacy Center", path: "/privacy", icon: ShieldAlert }
   ];
+
 
 
 
