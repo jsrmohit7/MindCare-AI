@@ -52,3 +52,26 @@ def get_daily_wellness_service(
     repository: DailyWellnessRepository = Depends(get_daily_wellness_repository)
 ) -> DailyWellnessService:
     return DailyWellnessService(repository, GraniteService())
+
+
+# AI Coach Dependencies
+from repositories.coach_repository import CoachRepository
+from services.coach_service import CoachService
+
+def get_coach_repository(db=Depends(get_database)) -> CoachRepository:
+    return CoachRepository(db)
+
+def get_coach_service(
+    coach_repo: CoachRepository = Depends(get_coach_repository),
+    assessment_repo: AssessmentRepository = Depends(get_assessment_repository),
+    wellness_repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
+    wellness_service: DailyWellnessService = Depends(get_daily_wellness_service)
+) -> CoachService:
+    return CoachService(
+        coach_repo=coach_repo,
+        assessment_repo=assessment_repo,
+        wellness_repo=wellness_repo,
+        wellness_service=wellness_service,
+        granite_service=GraniteService()
+    )
+

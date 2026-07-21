@@ -17,6 +17,7 @@ import {
   Stethoscope,
   Menu,
   X,
+  Bot,
 } from "lucide-react";
 
 export default function Navbar() {
@@ -34,9 +35,11 @@ export default function Navbar() {
     { name: "Assessment", path: "/assessment", icon: ClipboardList },
     { name: "History", path: "/history", icon: History },
     { name: "Daily Wellness", path: "/daily-checkin", icon: Heart },
+    { name: "AI Coach", path: "/coach", icon: Bot },
     { name: "Consult", path: "/consult", icon: Stethoscope },
     { name: "Profile", path: "/profile", icon: User },
   ];
+
 
   const anonymousItems = [
     { name: "Login", path: "/login", icon: LogIn },

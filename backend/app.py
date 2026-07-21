@@ -17,6 +17,8 @@ from routes.auth import router as auth_router
 from routes.questionnaire import router as questionnaire_router
 from api.assessment_routes import router as assessment_router
 from api.daily_wellness_routes import router as daily_wellness_router
+from api.coach_routes import router as coach_router
+
 
 from api.exception_handlers import (
     request_validation_exception_handler,
@@ -104,6 +106,9 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(assessment_router, prefix="/api/v1")
     # Daily Wellness Prefix: /api/v1
     fastapi_app.include_router(daily_wellness_router, prefix="/api/v1")
+    # AI Coach Prefix: /api/v1
+    fastapi_app.include_router(coach_router, prefix="/api/v1")
+
 
     # 5. Non-Versioned Root Router (Health & Readiness checks)
     fastapi_app.include_router(health_router)

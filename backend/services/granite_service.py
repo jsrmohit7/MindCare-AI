@@ -270,3 +270,67 @@ class GraniteService:
             duration
         )
         return parsed_data
+
+    def generate_chat_response(self, system_prompt: str, chat_history: list[dict]) -> str:
+        """
+        Sends the system prompt and history to the IBM Granite Model.
+        Returns the raw response text.
+        """
+        correlation_id = str(uuid.uuid4())
+        logger.info("Chat request started. Correlation ID: %s, Selected model: %s", correlation_id, self.model_id)
+
+        # Build message history. System prompt first.
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in chat_history:
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+
+        max_retries = 3
+        base_delay = 1.0
+        response_text = None
+        start_time = time.perf_counter()
+
+        for attempt in range(max_retries + 1):
+            try:
+                chat_response = self.model.chat(
+                    messages=messages,
+                    params={
+                        "max_tokens": self.max_new_tokens
+                    }
+                )
+                response_text = chat_response["choices"][0]["message"]["content"]
+                break
+            except ApiRequestFailure as e:
+                status_code = getattr(e, "code", None)
+                if status_code is None and hasattr(e, "response") and hasattr(e.response, "status_code"):
+                    status_code = e.response.status_code
+                if status_code in (401, 403):
+                    raise GraniteAuthError(f"Authentication failure: {e}") from e
+                is_transient = status_code in (429,) or (status_code is not None and 500 <= status_code < 600)
+                if is_transient and attempt < max_retries:
+                    time.sleep(base_delay * (2 ** attempt))
+                    continue
+                else:
+                    raise GraniteSDKError(f"SDK request failed: {e}") from e
+            except httpx.TimeoutException as e:
+                if attempt < max_retries:
+                    time.sleep(base_delay * (2 ** attempt))
+                    continue
+                else:
+                    raise GraniteTimeoutError(f"Request timed out: {e}") from e
+            except Exception as e:
+                raise GraniteSDKError(f"Unexpected error: {e}") from e
+
+        if response_text is None:
+            raise GraniteParsingError("Empty response returned from Granite")
+
+        duration = time.perf_counter() - start_time
+        logger.info(
+            "Chat request completed. Correlation ID: %s, Success, Duration: %.4f seconds",
+            correlation_id,
+            duration
+        )
+        return response_text
+
