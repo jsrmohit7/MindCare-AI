@@ -102,6 +102,13 @@ export default function CoachPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // Set initial sidebar state on client mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      setSidebarOpen(window.innerWidth >= 768);
+    }
+  }, []);
+
   // Load conversations & wellness data
   useEffect(() => {
     loadAllConversations();
@@ -162,6 +169,10 @@ export default function CoachPage() {
         console.error("Failed to load conversation details:", e);
       }
     }
+    // Auto-close sidebar on mobile
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleStartNewChat = async () => {
@@ -172,6 +183,10 @@ export default function CoachPage() {
       setSelectedConvId(newConv._id);
       setMessages([]);
       setInputMessage("");
+      // Auto-close sidebar on mobile
+      if (typeof window !== "undefined" && window.innerWidth < 768) {
+        setSidebarOpen(false);
+      }
     } catch (e) {
       console.error("Failed to start new chat:", e);
     } finally {
@@ -329,7 +344,7 @@ export default function CoachPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-7xl mx-auto h-[calc(100vh-6rem)] flex rounded-3xl border border-white/[0.05] bg-slate-900/20 overflow-hidden shadow-2xl backdrop-blur-2xl relative">
+      <div className="max-w-7xl mx-auto h-[calc(100dvh-7.5rem)] md:h-[calc(100vh-6rem)] flex rounded-none md:rounded-3xl border-y border-x-0 md:border border-white/[0.05] bg-slate-900/20 overflow-hidden shadow-2xl backdrop-blur-2xl relative">
         
         {/* ——— 1. Sidebar Panel (Left) ——— */}
         <div

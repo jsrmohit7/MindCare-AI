@@ -140,7 +140,7 @@ export default function JournalPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto py-6 space-y-8">
+      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/[0.04] pb-6">

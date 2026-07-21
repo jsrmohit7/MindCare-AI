@@ -52,7 +52,7 @@ export default function ProfilePage() {
 
   return (
     <ProtectedRoute>
-      <div className="mx-auto max-w-xl py-6">
+      <div className="mx-auto max-w-xl py-6 px-4 sm:px-6 lg:px-8">
         <div className="rounded-3xl border border-white/[0.05] bg-slate-900/40 p-8 shadow-2xl backdrop-blur-xl space-y-8">
           
           {/* Header */}

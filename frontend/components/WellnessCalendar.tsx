@@ -70,7 +70,7 @@ export default function WellnessCalendar({ history, onDayClick }: WellnessCalend
     `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl space-y-4">
+    <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-4 sm:p-6 shadow-xl backdrop-blur-xl space-y-4">
       {/* Calendar Header */}
       <div className="flex items-center justify-between">
         <h3 className="text-base font-bold text-white flex items-center gap-2">

@@ -52,7 +52,7 @@ export default function AdminDashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto space-y-8 py-6">
+      <div className="max-w-6xl mx-auto space-y-8 py-6 px-4 sm:px-6 lg:px-8">
         
         {/* Header */}
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.04] pb-6">

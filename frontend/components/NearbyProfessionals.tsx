@@ -818,7 +818,7 @@ export default function NearbyProfessionals({ severity }: NearbyProfessionalsPro
           {/* Tab Selection (List vs Map) & Filter Chips */}
           {lat !== null && lng !== null && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between border-b border-white/5 pb-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-white/5 pb-3">
                 {/* All / Lists filter chips */}
                 <div className="flex flex-wrap gap-2">
                   {[
@@ -995,7 +995,7 @@ export default function NearbyProfessionals({ severity }: NearbyProfessionalsPro
                 /* Map view container */
                 <div
                   ref={mapContainerRef}
-                  className="w-full h-[350px] rounded-2xl border border-white/10 overflow-hidden bg-slate-950 relative z-10"
+                  className="w-full h-[250px] md:h-[350px] rounded-2xl border border-white/10 overflow-hidden bg-slate-950 relative z-10"
                 />
               )}
             </div>

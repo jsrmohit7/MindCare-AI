@@ -849,7 +849,7 @@ export default function DashboardPage() {
         {!loadingWellness && historyData.length > 0 && (
           <div className="space-y-4">
             <SectionHeader label="Wellness Check-In Calendar" />
-            <div className="glass-card rounded-3xl p-6 border border-white/[0.04] shadow-md">
+            <div>
               <WellnessCalendar
                 history={historyData}
                 onDayClick={(record) => setCalendarRecord(record)}

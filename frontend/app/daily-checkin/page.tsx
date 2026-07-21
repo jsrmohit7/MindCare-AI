@@ -138,7 +138,7 @@ export default function DailyCheckInPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-3xl mx-auto space-y-8 py-6">
+      <div className="max-w-3xl mx-auto space-y-8 py-6 px-4 sm:px-6 lg:px-8">
         {/* Navigation Header */}
         <div className="flex items-center justify-between">
           <Link
@@ -179,7 +179,7 @@ export default function DailyCheckInPage() {
             <label className="text-sm font-bold text-white block">
               😊 How are you feeling today?
             </label>
-            <div className="grid grid-cols-5 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
               {[
                 { label: "Very Happy", emoji: SmilePlus, color: "text-emerald-400 border-emerald-500/10 bg-emerald-500/5 hover:border-emerald-500/25" },
                 { label: "Happy", emoji: Smile, color: "text-indigo-400 border-indigo-500/10 bg-indigo-500/5 hover:border-indigo-500/25" },

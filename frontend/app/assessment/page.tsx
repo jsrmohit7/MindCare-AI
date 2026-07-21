@@ -310,7 +310,7 @@ function AssessmentPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-3xl mx-auto space-y-8 py-6">
+      <div className="max-w-3xl mx-auto space-y-8 py-6 px-4 sm:px-6 lg:px-8">
         {/* Step Header */}
         <div className="space-y-4">
           <div className="flex items-center space-x-2 text-indigo-400">
@@ -516,7 +516,7 @@ function AssessmentPage() {
                               key={opt.value}
                               type="button"
                               onClick={() => handleSelectStressOption(opt.value)}
-                              className={`flex flex-col items-center justify-center p-3 rounded-2xl border text-center transition-all duration-200 ${
+                              className={`flex flex-col items-center justify-center py-3.5 px-3 rounded-2xl border text-center transition-all duration-200 min-h-[44px] ${
                                 isSelected
                                   ? "bg-indigo-600 border-indigo-500 text-white shadow-md shadow-indigo-500/15"
                                   : "bg-white/[0.01] border-white/[0.04] text-slate-400 hover:text-slate-200 hover:border-white/10"

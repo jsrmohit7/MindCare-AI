@@ -26,7 +26,7 @@ export default function HomePage() {
   ];
 
   return (
-    <div className="flex flex-col items-center justify-center space-y-16 py-12 md:py-20 relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center space-y-16 py-12 md:py-20 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       
       {/* Background ambient glow */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 h-80 w-80 bg-indigo-500/5 blur-3xl rounded-full pointer-events-none" />

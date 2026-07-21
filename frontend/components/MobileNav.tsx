@@ -46,19 +46,20 @@ export default function MobileNav() {
                 aria-current={active ? "page" : undefined}
                 aria-label={item.label}
                 className={`
-                  relative flex flex-col items-center gap-1 rounded-xl py-2 px-1 text-[9px] font-bold
+                  relative flex flex-col items-center justify-center gap-0.5 rounded-xl py-2.5 px-0.5 text-[8px] sm:text-[9px] font-bold tracking-tight
                   transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
+                  min-h-[46px] select-none
                   ${active ? "text-indigo-400" : "text-slate-500 hover:text-slate-300"}
                 `}
               >
                 <Icon
-                  className={`h-4.5 w-4.5 transition-all ${active ? "scale-110 text-indigo-400" : "text-slate-500"}`}
+                  className={`h-[18px] w-[18px] transition-all ${active ? "scale-110 text-indigo-400" : "text-slate-500"}`}
                   aria-hidden="true"
                 />
                 <span>{item.label}</span>
                 {active && (
                   <span
-                    className="absolute bottom-0 h-1 w-1 rounded-full bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
+                    className="absolute bottom-1.5 h-1 w-1 rounded-full bg-indigo-500 shadow-[0_0_6px_rgba(99,102,241,0.8)]"
                     aria-hidden="true"
                   />
                 )}

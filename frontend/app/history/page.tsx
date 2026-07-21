@@ -547,7 +547,7 @@ function HistoryPage() {
   const [activeTab, setActiveTab] = useState<Tab>("assessment");
 
   return (
-    <div className="space-y-6 py-6 max-w-6xl mx-auto">
+    <div className="space-y-6 py-6 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/[0.04] pb-6">

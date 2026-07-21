@@ -84,7 +84,7 @@ export default function ResultsClient({ id }: ResultsClientProps) {
   const overallScore = risk_profile.overall_risk?.score ?? 0;
 
   return (
-    <div className="space-y-8 py-6">
+    <div className="max-w-6xl mx-auto space-y-8 py-6 px-4 sm:px-6 lg:px-8">
       {/* Back Button */}
       <Link href="/history" className="inline-flex items-center text-xs font-bold text-slate-400 hover:text-slate-200 transition-colors">
         <ArrowLeft className="mr-2 h-4 w-4" />

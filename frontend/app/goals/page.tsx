@@ -136,7 +136,7 @@ export default function GoalsPage() {
 
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto py-6 space-y-8">
+      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
 
         {/* Header */}
         <div className="space-y-1.5 border-b border-white/[0.04] pb-6">
@@ -148,7 +148,7 @@ export default function GoalsPage() {
         </div>
 
         {/* Summary Stats */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
           {[
             { label: "Active", value: activeGoals.length, color: "text-indigo-400" },
             { label: "Completed", value: completedGoals.length, color: "text-emerald-400" },
