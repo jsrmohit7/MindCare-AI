@@ -87,7 +87,13 @@ async def connect_to_mongo() -> None:
         await db.activity_events.create_index("event_type")
         await db.coach_conversations.create_index("user_id")
         await db.coach_conversations.create_index("updated_at")
+        await db.mood_journal.create_index([("user_id", 1), ("date", 1)], unique=True)
+        await db.mood_journal.create_index("created_at")
+        await db.wellness_goals.create_index("user_id")
+        await db.wellness_goals.create_index("status")
+        await db.monthly_reviews.create_index([("user_id", 1), ("month", 1)], unique=True)
         print("Created MongoDB database indexes successfully.")
+
     except Exception as exc:
         print(f"MongoDB startup index creation failed: {exc}")
 

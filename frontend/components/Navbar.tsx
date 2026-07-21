@@ -18,6 +18,9 @@ import {
   Menu,
   X,
   Bot,
+  BookOpen,
+  Target,
+  Compass
 } from "lucide-react";
 
 export default function Navbar() {
@@ -36,9 +39,13 @@ export default function Navbar() {
     { name: "History", path: "/history", icon: History },
     { name: "Daily Wellness", path: "/daily-checkin", icon: Heart },
     { name: "AI Coach", path: "/coach", icon: Bot },
+    { name: "Mood Journal", path: "/journal", icon: BookOpen },
+    { name: "Wellness Goals", path: "/goals", icon: Target },
+    { name: "Journey Timeline", path: "/journey", icon: Compass },
     { name: "Consult", path: "/consult", icon: Stethoscope },
     { name: "Profile", path: "/profile", icon: User },
   ];
+
 
 
   const anonymousItems = [

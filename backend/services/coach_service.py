@@ -5,6 +5,9 @@ from repositories.assessment_repository import AssessmentRepository
 from repositories.daily_wellness_repository import DailyWellnessRepository
 from repositories.coach_memory_repository import MemoryRepository
 from repositories.activity_repository import ActivityRepository
+from repositories.journal_repository import JournalRepository
+from repositories.goal_repository import GoalRepository
+from repositories.monthly_review_repository import MonthlyReviewRepository
 from services.daily_wellness_service import DailyWellnessService
 from services.ai_orchestrator import AIOrchestrator
 from services.reasoning_engine import ReasoningEngine
@@ -25,7 +28,10 @@ class CoachService:
         granite_service: AIOrchestrator,
         memory_repo: MemoryRepository,
         activity_repo: ActivityRepository,
-        reasoning_engine: ReasoningEngine
+        reasoning_engine: ReasoningEngine,
+        journal_repo: JournalRepository,
+        goal_repo: GoalRepository,
+        review_repo: MonthlyReviewRepository
     ) -> None:
         self.coach_repo = coach_repo
         self.assessment_repo = assessment_repo
@@ -35,6 +41,9 @@ class CoachService:
         self.memory_repo = memory_repo
         self.activity_repo = activity_repo
         self.reasoning_engine = reasoning_engine
+        self.journal_repo = journal_repo
+        self.goal_repo = goal_repo
+        self.review_repo = review_repo
 
     async def get_user_wellness_context(self, user_id: str) -> str:
         """Compiles historical assessments, daily wellness records, and progress trends into a textual context."""
@@ -130,6 +139,34 @@ class CoachService:
         contributing_str = ", ".join([f"{f['factor']} (importance: {f['importance']})" for f in reasoning_data.get("contributing_factors", [])])
         actions_str = "\n".join([f"- {a['title']}: {a['description']} (Impact: {a['expected_impact']}, Effort: {a['estimated_effort']})" for a in reasoning_data.get("action_plan", [])])
 
+        # Fetch Phase 3 Data (Mood Journal, Active Goals, Monthly Review)
+        journals = await self.journal_repo.list_journals(user_id, limit=3)
+        journal_summaries = "No recent journals."
+        if journals:
+            journal_summaries = "\n".join([
+                f"- Date: {j['date']}: \"{j['ai_analysis']['summary']}\" (Sentiment: {j['ai_analysis']['sentiment']})"
+                for j in journals if j.get('ai_analysis')
+            ])
+
+        active_goals = await self.goal_repo.list_goals(user_id, status="active")
+        active_goals_str = "No active goals."
+        if active_goals:
+            active_goals_str = "\n".join([
+                f"- {g['title']} (Type: {g['type']}, Frequency: {g['frequency']})"
+                for g in active_goals
+            ])
+
+        current_month = date.today().strftime("%Y-%m-%d")[:7]
+        review = await self.review_repo.get_monthly_review(user_id, current_month)
+        monthly_review_str = "No monthly review generated yet for current month."
+        if review:
+            monthly_review_str = (
+                f"Month: {review.get('month')}, Wellness Score: {review.get('monthly_wellness_score')}/100\n"
+                f"AI Summary: {review.get('ai_summary')}\n"
+                f"Improvement areas: {', '.join(review.get('areas_to_improve', []))}\n"
+                f"Goals proposed: {', '.join(review.get('goals_next_month', []))}"
+            )
+
         context = f"""[USER PROFILE & CLINICAL DATA]
 Latest Assessment: {latest_assessment_str}
 Assessment History:
@@ -172,6 +209,16 @@ Limitations: {reasoning_data.get('limitations')}
 
 Recommended Action Plan:
 {actions_str}
+
+[PERSONAL WELLNESS EXPERIENCE LAYER]
+Latest Journal Summaries:
+{journal_summaries}
+
+Active Goals:
+{active_goals_str}
+
+Monthly Review Summary:
+{monthly_review_str}
 """
         return context
 
@@ -181,7 +228,7 @@ You are chatting with {user_name}.
 Your goal is to help the user reflect on their wellness journey, understand their progress, and support healthy habits.
 
 CRITICAL INSTRUCTIONS:
-1. Base your guidance and advice on the user's historical wellness data, AI memory, and predictions/reasoning provided in the CONTEXT. Be highly context-aware: acknowledge their streaks, recent check-ins, stressors, goals, and current stress trend predictions/root causes.
+1. Base your guidance and advice on the user's historical wellness data, active goals, recent daily journals, and monthly reviews provided in the CONTEXT. Be highly context-aware: reference their active goals, their journal reflections, and monthly wellness scores where appropriate.
 2. DO NOT make medical diagnoses or claim clinical certainty. You are a wellness coach, not a therapist or physician.
 3. Encourage professional help when appropriate (e.g. if the user exhibits severe risk scores or asks for clinical advice).
 4. If the conversation suggests serious distress, self-harm, or emergency, you must immediately encourage the user to contact trusted friends, family, or professional emergency services (e.g., suicide helplines), and clearly remind them that you are an AI companion, not a replacement for professional care.

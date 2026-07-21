@@ -20,6 +20,12 @@ from api.daily_wellness_routes import router as daily_wellness_router
 from api.coach_routes import router as coach_router
 from api.dashboard_routes import router as dashboard_router
 from api.reasoning_routes import router as reasoning_router
+from api.journal_routes import router as journal_router
+from api.goal_routes import router as goal_router
+from api.journey_routes import router as journey_router
+from api.monthly_review_routes import router as monthly_review_router
+from api.correlation_routes import router as correlation_router
+
 
 
 
@@ -116,6 +122,17 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(dashboard_router, prefix="/api/v1")
     # Cognitive Reasoning Prefix: /api/v1
     fastapi_app.include_router(reasoning_router, prefix="/api/v1")
+    # Mood Journal Prefix: /api/v1
+    fastapi_app.include_router(journal_router, prefix="/api/v1")
+    # Wellness Goals Prefix: /api/v1
+    fastapi_app.include_router(goal_router, prefix="/api/v1")
+    # Journey Timeline Prefix: /api/v1
+    fastapi_app.include_router(journey_router, prefix="/api/v1")
+    # Monthly Review Prefix: /api/v1
+    fastapi_app.include_router(monthly_review_router, prefix="/api/v1")
+    # Correlations Prefix: /api/v1
+    fastapi_app.include_router(correlation_router, prefix="/api/v1")
+
 
 
 

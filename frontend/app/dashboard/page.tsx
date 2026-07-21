@@ -26,12 +26,18 @@ import {
   ArrowDown,
   Minus,
   Trophy,
+  Target
 } from "lucide-react";
+
 import Link from "next/link";
 import { dailyWellnessService, DailyCheckInRecord } from "@/services/dailyWellness";
 import { SkeletonLine } from "@/components/SkeletonCard";
 import AchievementBadge, { computeAchievements } from "@/components/AchievementBadge";
 import { dashboardService, DashboardState, ReasoningState, ActionPlanItem, ContributingFactor } from "@/services/dashboard";
+import { journalService, JournalEntry } from "@/services/journal";
+import { goalsService, WellnessGoal } from "@/services/goals";
+import { journeyService, MonthlyReview, CorrelationsState } from "@/services/journey";
+
 
 
 
@@ -186,6 +192,12 @@ export default function DashboardPage() {
   const [reasoning, setReasoning] = useState<ReasoningState | null>(null);
   const [showReasoning, setShowReasoning] = useState(false);
 
+  // Phase 3 States
+  const [latestJournal, setLatestJournal] = useState<JournalEntry | null>(null);
+  const [activeGoals, setActiveGoals] = useState<WellnessGoal[]>([]);
+  const [monthlyReview, setMonthlyReview] = useState<MonthlyReview | null>(null);
+  const [correlations, setCorrelations] = useState<CorrelationsState | null>(null);
+
   const [loadingWellness, setLoadingWellness] = useState(true);
   const [calendarRecord, setCalendarRecord] = useState<DailyCheckInRecord | null>(null);
 
@@ -195,13 +207,28 @@ export default function DashboardPage() {
 
   const loadWellnessDashboard = async () => {
     try {
-      const [todayRes, streakRes, analyticsRes, historyRes, stateRes, reasoningRes] = await Promise.all([
+      const [
+        todayRes,
+        streakRes,
+        analyticsRes,
+        historyRes,
+        stateRes,
+        reasoningRes,
+        journalsRes,
+        goalsRes,
+        reviewRes,
+        correlationsRes
+      ] = await Promise.all([
         dailyWellnessService.getTodayCheckIn(),
         dailyWellnessService.getStreak(),
         dailyWellnessService.getAnalytics(),
         dailyWellnessService.getHistory(),
         dashboardService.getDashboardState(),
-        dashboardService.getReasoningState()
+        dashboardService.getReasoningState(),
+        journalService.listJournals(),
+        goalsService.listGoals("active"),
+        journeyService.getMonthlyReview(),
+        journeyService.getCorrelations()
       ]);
       setTodayCheckedIn(todayRes.checked_in);
       setTodayRecord(todayRes.data);
@@ -210,11 +237,20 @@ export default function DashboardPage() {
       setHistoryData(historyRes);
       setDashboardState(stateRes);
       setReasoning(reasoningRes);
+      
+      // Set Phase 3 States
+      if (journalsRes && journalsRes.length > 0) {
+        setLatestJournal(journalsRes[0]);
+      }
+      setActiveGoals(goalsRes || []);
+      setMonthlyReview(reviewRes || null);
+      setCorrelations(correlationsRes || null);
     } catch (e) {
       console.error("Failed to load wellness dashboard metrics:", e);
     } finally {
       setLoadingWellness(false);
     }
+
   };
 
 
@@ -659,14 +695,172 @@ export default function DashboardPage() {
                       : "bg-white/5 text-slate-600 border-white/5"
                   }`}
                 >
-                  {label}
+                          {label}
                 </span>
               ))}
             </div>
           </div>
         </div>
 
+        {/* ——— 4.5. Phase 3: Personal Wellness Experience Integrations ——— */}
+
+        {!loadingWellness && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            {/* Latest Journal Summary */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-purple-400" />
+                  📖 Latest Journal
+                </h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Reflect on daily logs with automatic sentiment extraction.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center">
+                {latestJournal ? (
+                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500">
+                      <span>{latestJournal.date}</span>
+                      <span className="bg-purple-500/10 text-purple-400 border border-purple-500/20 px-1.5 py-0.5 rounded font-bold uppercase">
+                        {latestJournal.ai_analysis?.sentiment}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed italic">
+                      &ldquo;{latestJournal.ai_analysis?.summary}&rdquo;
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-slate-500 text-xs py-4 text-center">No journal entries written.</div>
+                )}
+              </div>
+
+              <Link
+                href="/journal"
+                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
+              >
+                Open Journal
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+
+            {/* Active Goals Checklist */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Target className="h-4 w-4 text-pink-400" />
+                  🎯 Goal Checklist
+                </h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Track and complete your personal wellness milestones.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center">
+                {activeGoals.length > 0 ? (
+                  <div className="space-y-1.5 py-2 border-t border-white/5 mt-2 max-h-[100px] overflow-y-auto pr-1">
+                    {activeGoals.slice(0, 3).map((goal) => (
+                      <div key={goal._id} className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-lg text-[11px]">
+                        <span className="truncate text-slate-300 pr-1">{goal.title}</span>
+                        <span className="text-[9px] text-pink-400 capitalize shrink-0 font-bold">{goal.frequency}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-slate-500 text-xs py-4 text-center">No active goals. Set one!</div>
+                )}
+              </div>
+
+              <Link
+                href="/goals"
+                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
+              >
+                Manage Goals
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+
+            {/* Monthly AI Review Preview */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Sparkles className="h-4 w-4 text-purple-400 animate-pulse" />
+                  ✨ Monthly AI Review
+                </h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Supportive monthly summaries and improvement insights.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center">
+                {monthlyReview ? (
+                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
+                    <div className="flex items-center justify-between text-[10px] text-slate-500 font-bold">
+                      <span>Score: {monthlyReview.monthly_wellness_score}/100</span>
+                      <span>{monthlyReview.month}</span>
+                    </div>
+                    <p className="text-xs text-slate-300 line-clamp-3 leading-relaxed italic">
+                      &ldquo;{monthlyReview.ai_summary}&rdquo;
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-slate-500 text-xs py-4 text-center">No monthly review compiled.</div>
+                )}
+              </div>
+
+              <Link
+                href="/journey"
+                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
+              >
+                View Journey
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+
+            {/* Correlations Highlights */}
+            <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 flex flex-col justify-between space-y-4 shadow-xl backdrop-blur-xl text-left">
+              <div className="space-y-2">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4 text-indigo-400 animate-pulse" />
+                  📈 Correlation Focus
+                </h3>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  Observed associations between sleep, activity, and stress.
+                </p>
+              </div>
+
+              <div className="flex-1 flex flex-col justify-center">
+                {correlations ? (
+                  <div className="space-y-2 py-2 border-t border-white/5 mt-2">
+                    <div className="flex items-center justify-between text-[9px]">
+                      <span className="font-bold text-slate-200 uppercase">Sleep vs Stress</span>
+                      <span className="text-indigo-400 capitalize">{correlations.sleep_vs_stress?.strength}</span>
+                    </div>
+                    <p className="text-[10px] text-slate-400 leading-normal line-clamp-3 italic text-slate-400">
+                      {correlations.sleep_vs_stress?.explanation}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-slate-500 text-xs py-4 text-center">Complete check-ins to compute correlations.</div>
+                )}
+              </div>
+
+              <Link
+                href="/journey"
+                className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-white/10 border border-white/10 transition-all"
+              >
+                Compare Habits
+                <ChevronRight className="ml-1 h-3 w-3" />
+              </Link>
+            </div>
+
+          </div>
+        )}
+
         {/* ——— 5. Achievements ——— */}
+
         <div className="rounded-2xl border border-white/10 bg-slate-900/40 p-6 shadow-xl backdrop-blur-xl space-y-4">
           <div className="flex items-center justify-between border-b border-white/5 pb-3">
             <h3 className="text-base font-bold text-white flex items-center gap-2">
