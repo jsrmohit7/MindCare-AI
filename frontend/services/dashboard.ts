@@ -18,9 +18,39 @@ export interface DashboardState {
   };
 }
 
+export interface ActionPlanItem {
+  title: string;
+  description: string;
+  expected_impact: string;
+  confidence: number;
+  estimated_effort: string;
+}
+
+export interface ContributingFactor {
+  factor: string;
+  importance: number;
+}
+
+export interface ReasoningState {
+  prediction: string;
+  confidence: number;
+  evidence: string;
+  reasoning: string;
+  recommendations: string[];
+  action_plan: ActionPlanItem[];
+  contributing_factors: ContributingFactor[];
+  data_sources: string[];
+  limitations: string;
+}
+
 export const dashboardService = {
   async getDashboardState(): Promise<DashboardState> {
     const response = await api.get<DashboardState>("/dashboard/state");
+    return response.data;
+  },
+
+  async getReasoningState(): Promise<ReasoningState> {
+    const response = await api.get<ReasoningState>("/reasoning");
     return response.data;
   }
 };

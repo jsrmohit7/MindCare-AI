@@ -31,7 +31,8 @@ import Link from "next/link";
 import { dailyWellnessService, DailyCheckInRecord } from "@/services/dailyWellness";
 import { SkeletonLine } from "@/components/SkeletonCard";
 import AchievementBadge, { computeAchievements } from "@/components/AchievementBadge";
-import { dashboardService, DashboardState } from "@/services/dashboard";
+import { dashboardService, DashboardState, ReasoningState, ActionPlanItem, ContributingFactor } from "@/services/dashboard";
+
 
 
 // Lazy load heavy components
@@ -182,6 +183,9 @@ export default function DashboardPage() {
   const [analyticsData, setAnalyticsData] = useState<DailyCheckInRecord[]>([]);
   const [historyData, setHistoryData] = useState<DailyCheckInRecord[]>([]);
   const [dashboardState, setDashboardState] = useState<DashboardState | null>(null);
+  const [reasoning, setReasoning] = useState<ReasoningState | null>(null);
+  const [showReasoning, setShowReasoning] = useState(false);
+
   const [loadingWellness, setLoadingWellness] = useState(true);
   const [calendarRecord, setCalendarRecord] = useState<DailyCheckInRecord | null>(null);
 
@@ -191,12 +195,13 @@ export default function DashboardPage() {
 
   const loadWellnessDashboard = async () => {
     try {
-      const [todayRes, streakRes, analyticsRes, historyRes, stateRes] = await Promise.all([
+      const [todayRes, streakRes, analyticsRes, historyRes, stateRes, reasoningRes] = await Promise.all([
         dailyWellnessService.getTodayCheckIn(),
         dailyWellnessService.getStreak(),
         dailyWellnessService.getAnalytics(),
         dailyWellnessService.getHistory(),
-        dashboardService.getDashboardState()
+        dashboardService.getDashboardState(),
+        dashboardService.getReasoningState()
       ]);
       setTodayCheckedIn(todayRes.checked_in);
       setTodayRecord(todayRes.data);
@@ -204,12 +209,14 @@ export default function DashboardPage() {
       setAnalyticsData(analyticsRes);
       setHistoryData(historyRes);
       setDashboardState(stateRes);
+      setReasoning(reasoningRes);
     } catch (e) {
       console.error("Failed to load wellness dashboard metrics:", e);
     } finally {
       setLoadingWellness(false);
     }
   };
+
 
 
   // Progress comparison metrics (current vs previous check-in)
@@ -386,7 +393,7 @@ export default function DashboardPage() {
                   </div>
                 )}
 
-                <div className="md:col-span-3">
+                <div className="md:col-span-3 flex flex-col gap-3">
                   <Link
                     href="/daily-checkin"
                     className="w-full justify-center inline-flex items-center rounded-xl bg-white/5 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/10 border border-white/10 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-500"
@@ -394,7 +401,79 @@ export default function DashboardPage() {
                     <span>View Report / Edit Check-In</span>
                     <ChevronRight className="ml-1 h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
+
+                  {reasoning && (
+                    <div className="w-full rounded-xl border border-white/5 bg-slate-950/40 p-4 text-xs space-y-3">
+                      <button
+                        onClick={() => setShowReasoning(!showReasoning)}
+                        className="w-full flex items-center justify-between text-indigo-400 hover:text-indigo-300 font-bold focus:outline-none transition-all"
+                        aria-expanded={showReasoning}
+                      >
+                        <span className="flex items-center gap-1.5 uppercase tracking-wider">
+                          <Sparkles className="h-3.5 w-3.5" aria-hidden="true" />
+                          Why am I seeing this?
+                        </span>
+                        <span className="text-[10px] bg-indigo-500/10 px-2 py-0.5 rounded border border-indigo-500/20">
+                          {showReasoning ? "Collapse" : "Expand"}
+                        </span>
+                      </button>
+
+                      {showReasoning && (
+                        <div className="pt-3 border-t border-white/5 space-y-3 text-slate-300 transition-all animate-fadeIn">
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Current Prediction</span>
+                            <p className="font-semibold text-slate-200 mt-0.5">{reasoning.prediction} (Confidence: {reasoning.confidence}%)</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Evidence</span>
+                            <p className="mt-0.5">{reasoning.evidence}</p>
+                          </div>
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase block">Reasoning & Analysis</span>
+                            <p className="mt-0.5 leading-relaxed">{reasoning.reasoning}</p>
+                          </div>
+                          
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Top Contributing Factors</span>
+
+                            <div className="space-y-1.5">
+                              {reasoning.contributing_factors?.map((f: ContributingFactor, i: number) => (
+                                <div key={i} className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-lg">
+                                  <span>{f.factor}</span>
+                                  <span className="font-bold text-indigo-300 text-[10px]">Weight: {f.importance}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-[10px] text-slate-500 font-bold uppercase block mb-1">Personalized Actions</span>
+                            <div className="space-y-1.5">
+                              {reasoning.action_plan?.map((a: ActionPlanItem, i: number) => (
+                                <div key={i} className="bg-white/5 p-2.5 rounded-lg space-y-1">
+                                  <div className="flex items-center justify-between">
+                                    <span className="font-bold text-slate-200">{a.title}</span>
+                                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                                      Impact: {a.expected_impact}
+                                    </span>
+                                  </div>
+                                  <p className="text-[11px] text-slate-400">{a.description}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+
+
+                          <div className="pt-2 border-t border-white/5 text-[9px] text-slate-500 italic space-y-1">
+                            <p>Data Sources Used: {reasoning.data_sources?.join(", ")}</p>
+                            <p>{reasoning.limitations}</p>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
+
               </div>
             )}
           </div>

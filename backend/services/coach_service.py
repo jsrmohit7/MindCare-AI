@@ -7,6 +7,7 @@ from repositories.coach_memory_repository import MemoryRepository
 from repositories.activity_repository import ActivityRepository
 from services.daily_wellness_service import DailyWellnessService
 from services.ai_orchestrator import AIOrchestrator
+from services.reasoning_engine import ReasoningEngine
 from tasks.ai_memory_task import update_user_memory_task
 
 class CoachService:
@@ -23,7 +24,8 @@ class CoachService:
         wellness_service: DailyWellnessService,
         granite_service: AIOrchestrator,
         memory_repo: MemoryRepository,
-        activity_repo: ActivityRepository
+        activity_repo: ActivityRepository,
+        reasoning_engine: ReasoningEngine
     ) -> None:
         self.coach_repo = coach_repo
         self.assessment_repo = assessment_repo
@@ -32,6 +34,7 @@ class CoachService:
         self.granite_service = granite_service
         self.memory_repo = memory_repo
         self.activity_repo = activity_repo
+        self.reasoning_engine = reasoning_engine
 
     async def get_user_wellness_context(self, user_id: str) -> str:
         """Compiles historical assessments, daily wellness records, and progress trends into a textual context."""
@@ -114,6 +117,19 @@ class CoachService:
         encouragement = memory.get("encouragement_style", "gentle validation")
         comm_style = memory.get("communication_style", "supportive and conversational")
 
+        # Get explainable AI reasoning
+        reasoning_data = self.reasoning_engine.generate_reasoning(
+            assessments=assessments,
+            checkins=checkins,
+            streak_data={
+                "current_streak": current_streak,
+                "longest_streak": longest_streak,
+                "total_checkins": total_checkins
+            }
+        )
+        contributing_str = ", ".join([f"{f['factor']} (importance: {f['importance']})" for f in reasoning_data.get("contributing_factors", [])])
+        actions_str = "\n".join([f"- {a['title']}: {a['description']} (Impact: {a['expected_impact']}, Effort: {a['estimated_effort']})" for a in reasoning_data.get("action_plan", [])])
+
         context = f"""[USER PROFILE & CLINICAL DATA]
 Latest Assessment: {latest_assessment_str}
 Assessment History:
@@ -147,6 +163,15 @@ Recent Wellness Notes/Journal Entries:
 - Important Goals: {goals}
 - Communication Preference: {comm_style}
 - Encouragement Style: {encouragement}
+
+[COGNITIVE REASONING & RECOMMENDATIONS]
+Latest Prediction: {reasoning_data.get('prediction')} (Confidence: {reasoning_data.get('confidence')}%)
+Reasoning: {reasoning_data.get('reasoning')}
+Contributing Factors: {contributing_str}
+Limitations: {reasoning_data.get('limitations')}
+
+Recommended Action Plan:
+{actions_str}
 """
         return context
 
@@ -156,7 +181,7 @@ You are chatting with {user_name}.
 Your goal is to help the user reflect on their wellness journey, understand their progress, and support healthy habits.
 
 CRITICAL INSTRUCTIONS:
-1. Base your guidance and advice on the user's historical wellness data and AI memory provided in the CONTEXT. Be highly context-aware: acknowledge their streaks, recent check-ins, stressors, goals, and assessment scores.
+1. Base your guidance and advice on the user's historical wellness data, AI memory, and predictions/reasoning provided in the CONTEXT. Be highly context-aware: acknowledge their streaks, recent check-ins, stressors, goals, and current stress trend predictions/root causes.
 2. DO NOT make medical diagnoses or claim clinical certainty. You are a wellness coach, not a therapist or physician.
 3. Encourage professional help when appropriate (e.g. if the user exhibits severe risk scores or asks for clinical advice).
 4. If the conversation suggests serious distress, self-harm, or emergency, you must immediately encourage the user to contact trusted friends, family, or professional emergency services (e.g., suicide helplines), and clearly remind them that you are an AI companion, not a replacement for professional care.
@@ -228,7 +253,6 @@ CONTEXT DATA FOR {user_name}:
                 ai_orchestrator=self.granite_service
             )
         else:
-            # Fallback inline execution if no background_tasks queue is passed
             import asyncio
             asyncio.create_task(
                 update_user_memory_task(

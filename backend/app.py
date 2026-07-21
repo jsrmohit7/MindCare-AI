@@ -19,6 +19,8 @@ from api.assessment_routes import router as assessment_router
 from api.daily_wellness_routes import router as daily_wellness_router
 from api.coach_routes import router as coach_router
 from api.dashboard_routes import router as dashboard_router
+from api.reasoning_routes import router as reasoning_router
+
 
 
 
@@ -112,6 +114,9 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(coach_router, prefix="/api/v1")
     # Dashboard State Prefix: /api/v1
     fastapi_app.include_router(dashboard_router, prefix="/api/v1")
+    # Cognitive Reasoning Prefix: /api/v1
+    fastapi_app.include_router(reasoning_router, prefix="/api/v1")
+
 
 
 

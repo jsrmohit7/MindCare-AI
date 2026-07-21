@@ -31,6 +31,9 @@ def get_wellness_state_repository(db=Depends(get_database)) -> WellnessStateRepo
 # 2. Engines & Services
 from services.ai_orchestrator import AIOrchestrator
 from services.wellness_intelligence_engine import WellnessIntelligenceEngine
+from services.prediction_engine import PredictionEngine
+from services.insight_engine import InsightEngine
+from services.reasoning_engine import ReasoningEngine
 from services.decision_engine import DecisionEngine
 from services.analysis_engine import AnalysisEngine
 from services.assessment_service import AssessmentService
@@ -45,6 +48,22 @@ def get_ai_orchestrator() -> AIOrchestrator:
 
 def get_wellness_intelligence_engine() -> WellnessIntelligenceEngine:
     return WellnessIntelligenceEngine()
+
+def get_prediction_engine(
+    ai_orchestrator: AIOrchestrator = Depends(get_ai_orchestrator)
+) -> PredictionEngine:
+    return PredictionEngine(ai_orchestrator)
+
+def get_insight_engine(
+    ai_orchestrator: AIOrchestrator = Depends(get_ai_orchestrator)
+) -> InsightEngine:
+    return InsightEngine(ai_orchestrator)
+
+def get_reasoning_engine(
+    prediction_engine: PredictionEngine = Depends(get_prediction_engine),
+    insight_engine: InsightEngine = Depends(get_insight_engine)
+) -> ReasoningEngine:
+    return ReasoningEngine(prediction_engine, insight_engine)
 
 def get_decision_engine(
     wellness_engine: WellnessIntelligenceEngine = Depends(get_wellness_intelligence_engine)
@@ -79,7 +98,8 @@ def get_coach_service(
     wellness_repo: DailyWellnessRepository = Depends(get_daily_wellness_repository),
     wellness_service: DailyWellnessService = Depends(get_daily_wellness_service),
     memory_repo: MemoryRepository = Depends(get_memory_repository),
-    activity_repo: ActivityRepository = Depends(get_activity_repository)
+    activity_repo: ActivityRepository = Depends(get_activity_repository),
+    reasoning_engine: ReasoningEngine = Depends(get_reasoning_engine)
 ) -> CoachService:
     return CoachService(
         coach_repo=coach_repo,
@@ -88,5 +108,7 @@ def get_coach_service(
         wellness_service=wellness_service,
         granite_service=AIOrchestrator(),
         memory_repo=memory_repo,
-        activity_repo=activity_repo
+        activity_repo=activity_repo,
+        reasoning_engine=reasoning_engine
     )
+
