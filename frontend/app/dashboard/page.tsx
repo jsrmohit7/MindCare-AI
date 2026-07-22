@@ -222,6 +222,79 @@ function getGreetingForEmotion(emotion: string): string {
   }
 }
 
+function CountUp({ end, duration = 1000 }: { end: number; duration?: number }) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    let startTime: number | null = null;
+    const step = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * end));
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
+  }, [end, duration]);
+
+  return <>{count}</>;
+}
+
+function TypewriterInsight({ text }: { text: string }) {
+  const [displayedText, setDisplayedText] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsAnalyzing(false);
+      let currentLength = 0;
+      const interval = setInterval(() => {
+        currentLength += 3;
+        if (currentLength >= text.length) {
+          setDisplayedText(text);
+          clearInterval(interval);
+        } else {
+          setDisplayedText(text.slice(0, currentLength));
+        }
+      }, 15);
+      return () => clearInterval(interval);
+    }, 1200);
+
+    return () => clearTimeout(timer);
+  }, [text]);
+
+  if (isAnalyzing) {
+    return (
+      <div className="flex items-center gap-2 text-[11px] text-slate-400 py-1">
+        <span className="relative flex h-2 w-2">
+          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+          <span className="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+        </span>
+        <span className="font-semibold animate-pulse">Analyzing today&apos;s wellness patterns...</span>
+      </div>
+    );
+  }
+
+  return (
+    <p className="text-[11px] text-slate-300 leading-relaxed font-semibold transition-all duration-500">
+      {displayedText}
+    </p>
+  );
+}
+
+function AIPresenceOrb() {
+  return (
+    <div className="relative h-10 w-10 shrink-0">
+      <div className="absolute inset-[-4px] rounded-full bg-accent/20 animate-pulse blur-[4px] z-0" />
+      <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-accent via-indigo-500 to-pink-400 animate-spin" style={{ animationDuration: "12s" }} />
+      <div className="absolute inset-[3px] rounded-full bg-slate-950 flex items-center justify-center z-10 border border-white/[0.04]">
+        <Sparkles className="h-4.5 w-4.5 text-accent animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
 function getRecommendationCards(emotion: string) {
   switch (emotion) {
     case "Low Mood":
@@ -392,12 +465,18 @@ function getRecommendationCards(emotion: string) {
 
 export default function DashboardPage() {
   const { user } = useAuth();
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    card.style.setProperty("--mouse-x", `${x}px`);
+    card.style.setProperty("--mouse-y", `${y}px`);
+  };
   const {
     detectedEmotion,
-    theme: activeThemeName,
     explanation,
     advice,
-    motivation,
     showSupportRecommendation,
     history: emotionHistory,
   } = useEmotion();
@@ -420,8 +499,12 @@ export default function DashboardPage() {
 
   const [loadingWellness, setLoadingWellness] = useState(true);
   const [calendarRecord, setCalendarRecord] = useState<DailyCheckInRecord | null>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  const [gaugeScore, setGaugeScore] = useState(0);
 
   useEffect(() => {
+    setIsMounted(true);
     loadWellnessDashboard();
   }, []);
 
@@ -520,99 +603,117 @@ export default function DashboardPage() {
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
   const wellnessScore = dashboardState?.wellness_score ?? todayRecord?.wellness_score;
 
+  useEffect(() => {
+    if (!loadingWellness && wellnessScore) {
+      const timer = setTimeout(() => {
+        setGaugeScore(wellnessScore);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [loadingWellness, wellnessScore]);
+
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className={`max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 transition-all duration-[1000ms] ease-out ${isMounted ? "opacity-100 scale-100 blur-0" : "opacity-0 scale-[0.98] blur-[8px]"}`}>
 
         {/* ─── 1. Header: Greeting + Streak ─── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fadeInUp stagger-1 opacity-0">
-          <div className="space-y-1.5">
-            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{getTodayDate()}</p>
-            <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">
-              {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"} 👋
-            </h1>
-            <p className="text-xs text-indigo-400 font-bold tracking-tight mt-1 flex items-center gap-1.5">
-              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
-              <span>{getGreetingForEmotion(detectedEmotion)}</span>
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 shrink-0">
-            {/* Streak Indicator */}
-            <div className="flex items-center gap-3 bg-amber-500/[0.04] border border-amber-500/15 rounded-2xl px-4 py-2.5">
-              <Flame className="h-5 w-5 text-amber-500 shrink-0" aria-hidden="true" />
-              <div>
-                <p className="text-[9px] font-bold text-amber-500/80 uppercase tracking-wider">Active Streak</p>
-                <p className="text-base font-black text-amber-400 leading-none mt-0.5">{streak.current_streak} days</p>
-              </div>
-            </div>
-
-            {/* Check-In CTA */}
-            <Link
-              href="/daily-checkin"
-              className={`
-                flex items-center gap-2 rounded-2xl px-4 py-3 text-xs font-bold transition-all border
-                focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
-                ${todayCheckedIn
-                  ? "bg-emerald-500/10 border-emerald-500/15 text-emerald-400 cursor-default"
-                  : "bg-indigo-600 border-indigo-500/30 text-white hover:bg-indigo-500 shadow-md shadow-indigo-500/20 active:scale-95"
-                }
-              `}
-            >
-              <Heart className="h-3.5 w-3.5" aria-hidden="true" />
-              <span>{todayCheckedIn ? "Checked in today ✓" : "Log Daily Check-in"}</span>
-            </Link>
-          </div>
-        </div>
-
-        {/* ─── Emotion-Adaptive Synthesis Panel ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeInUp stagger-2 opacity-0">
-          {/* watsonx Granite Sentiment Synthesizer Card */}
-          <div className="lg:col-span-2 glass-card rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between border-l-4 border-l-accent">
-            <div className="absolute top-0 right-0 h-32 w-32 bg-accent/5 blur-3xl rounded-full" />
+        {/* ─── 1. Cinematic Dashboard Hero & History Timeline ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Widescreen Hero Panel */}
+          <div 
+            onMouseMove={handleMouseMove}
+            className="lg:col-span-2 glass-panel interactive-card p-6 md:p-8 relative overflow-hidden flex flex-col justify-between border-l-4 border-l-accent animate-fadeInUp stagger-1 opacity-0"
+          >
+            {/* Soft Ambient Background Glow */}
+            <div className="absolute top-0 right-0 h-48 w-48 bg-accent/10 blur-3xl rounded-full animate-breathe" />
+            
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <div className="h-8 w-8 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent">
-                    <Sparkles className="h-4 w-4 animate-pulse" />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-bold text-accent uppercase tracking-widest">Cognitive State Synthesis</p>
-                    <h2 className="text-sm font-bold text-white mt-0.5">Current Emotion: {detectedEmotion}</h2>
-                  </div>
+              {/* Header Brand Badge + AI Presence Orb */}
+              <div className="flex items-center gap-3">
+                <AIPresenceOrb />
+                <div>
+                  <p className="text-[9px] font-bold text-accent uppercase tracking-widest leading-none">{getTodayDate()}</p>
+                  <h1 className="text-xl md:text-2xl font-black text-white tracking-tight mt-1">
+                    {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"} 👋
+                  </h1>
                 </div>
-                <span className="rounded-full bg-accent/15 px-3 py-1 text-[10px] font-bold text-accent border border-accent/25 flex items-center gap-1.5 capitalize">
-                  {activeThemeName.replace('_', ' ')} theme active
+              </div>
+
+              {/* Current Emotional State Visualizer */}
+              <div className="flex flex-wrap items-center gap-2 pt-1">
+                <span className="rounded-full bg-accent/10 px-3.5 py-1 text-[11px] font-bold text-accent border border-accent/20 flex items-center gap-1.5 animate-pulse">
+                  {detectedEmotion === "Happy" && "😊"}
+                  {detectedEmotion === "Calm" && "😌"}
+                  {detectedEmotion === "Focused" && "🎯"}
+                  {detectedEmotion === "Stressed" && "😟"}
+                  {detectedEmotion === "Anxious" && "😰"}
+                  {detectedEmotion === "Low Mood" && "😔"}
+                  <span className="capitalize">{detectedEmotion} Mood active</span>
+                </span>
+
+                <span className="text-[11px] text-slate-400 font-semibold italic">
+                  &ldquo;{getGreetingForEmotion(detectedEmotion)}&rdquo;
                 </span>
               </div>
 
-              <div className="space-y-2 pt-1">
-                <p className="text-xs text-slate-300 leading-relaxed font-semibold">
-                  {explanation || "Your cognitive metrics reflect a calm and balanced state of mind."}
-                </p>
-                <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
+              {/* Typewritten AI Insight Banner */}
+              <div className="bg-white/[0.02] border border-white/[0.04] rounded-2xl p-4.5 space-y-2 mt-4">
+                <div className="flex items-center gap-1.5 text-[9px] font-bold text-accent uppercase tracking-widest pb-1 border-b border-white/[0.02]">
+                  <Sparkles className="h-3 w-3 animate-pulse" />
+                  <span>watsonx Granite Cognitive Insight</span>
+                </div>
+                <TypewriterInsight text={explanation || "Your cognitive metrics reflect a calm and balanced state of mind."} />
+                <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
                   <span className="font-bold text-accent">Personalized Advice:</span> {advice || "Engage in mindfulness checks and stick to your hydration goal."}
                 </p>
               </div>
             </div>
 
-            {motivation && (
-              <div className="mt-4 pt-3 border-t border-white/[0.04] text-[10px] text-slate-400 italic">
-                &ldquo;{motivation}&rdquo;
+            {/* Bottom Row: Streak & Quick Checkin */}
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-t border-white/[0.04] pt-4 mt-6">
+              {/* Streak Indicator */}
+              <div className="flex items-center gap-3 bg-amber-500/[0.04] border border-amber-500/15 rounded-2xl px-4 py-2.5">
+                <Flame className="h-5.5 w-5.5 text-amber-500 shrink-0 animate-pulse" />
+                <div>
+                  <p className="text-[9px] font-bold text-amber-500/80 uppercase tracking-wider">Active Streak</p>
+                  <p className="text-base font-black text-amber-400 leading-none mt-0.5">
+                    {loadingWellness ? "—" : <CountUp end={streak.current_streak} />} days
+                  </p>
+                </div>
               </div>
-            )}
+
+              {/* Check-In CTA */}
+              <Link href="/daily-checkin">
+                <button
+                  className={`
+                    flex items-center gap-2 rounded-2xl px-4 py-3.5 text-xs font-bold transition-all border button-micro
+                    ${todayCheckedIn
+                      ? "bg-emerald-500/10 border-emerald-500/15 text-emerald-400 cursor-default"
+                      : "bg-indigo-600 border-indigo-500/30 text-white hover:bg-indigo-500 shadow-md shadow-indigo-500/20"
+                    }
+                  `}
+                  disabled={todayCheckedIn}
+                >
+                  <Heart className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{todayCheckedIn ? "Checked in today ✓" : "Log Daily Check-in"}</span>
+                </button>
+              </Link>
+            </div>
           </div>
 
           {/* Emotion History Timeline Card */}
-          <div className="glass-card rounded-3xl p-6 flex flex-col justify-between">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card p-6 flex flex-col justify-between animate-fadeInUp stagger-2 opacity-0"
+          >
             <div className="space-y-3.5">
               <div className="flex items-center gap-2 border-b border-white/[0.04] pb-2">
                 <History className="h-4 w-4 text-slate-500" />
                 <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Emotion History</p>
               </div>
               {emotionHistory && emotionHistory.length > 0 ? (
-                <div className="space-y-3 max-h-[140px] overflow-y-auto no-scrollbar">
-                  {emotionHistory.slice(0, 4).map((entry, idx) => {
+                <div className="space-y-3 max-h-[220px] overflow-y-auto no-scrollbar">
+                  {emotionHistory.slice(0, 5).map((entry, idx) => {
                     const entryDate = entry.date;
                     let friendlyName = entryDate;
                     try {
@@ -667,13 +768,16 @@ export default function DashboardPage() {
         {/* ─── 2. Vitals deck & Wellness Score Gauge ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeInUp stagger-3 opacity-0">
           {/* Score card */}
-          <div className="glass-card rounded-3xl p-6 flex flex-col justify-between gap-6 relative overflow-hidden">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 flex flex-col justify-between gap-6 relative overflow-hidden"
+          >
             <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/5 blur-3xl rounded-full" />
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Wellness Index</p>
                 <p className="text-4xl font-black text-white mt-1.5 leading-none">
-                  {loadingWellness ? "—" : wellnessScore ?? "—"}
+                  {loadingWellness ? "—" : <CountUp end={wellnessScore ?? 0} />}
                   <span className="text-base text-slate-500 font-bold ml-1">/100</span>
                 </p>
               </div>
@@ -685,11 +789,11 @@ export default function DashboardPage() {
                     stroke="#6366f1" strokeWidth="3.5"
                     strokeLinecap="round"
                     strokeDasharray={`${2 * Math.PI * 20}`}
-                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - (wellnessScore ?? 0) / 100)}`}
+                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - gaugeScore / 100)}`}
                     className="transition-all duration-1000"
                   />
                 </svg>
-                <Activity className="absolute h-5 w-5 text-indigo-400" aria-hidden="true" />
+                <Activity className="absolute h-5 w-5 text-indigo-400 animate-pulse" aria-hidden="true" />
               </div>
             </div>
 
@@ -714,7 +818,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Vitals Parameter Row */}
-          <div className="glass-card rounded-3xl p-6 lg:col-span-2 space-y-4">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 lg:col-span-2 space-y-4"
+          >
             <div className="flex items-center justify-between border-b border-white/[0.04] pb-2">
               <p className="text-[9px] font-bold uppercase tracking-wider text-slate-500">Logged parameters</p>
               {todayCheckedIn && (
@@ -861,7 +968,10 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
               
               {/* Mood Journal */}
-              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+              <div 
+                onMouseMove={handleMouseMove}
+                className="glass-card interactive-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all"
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-violet-400" aria-hidden="true" />
@@ -890,7 +1000,10 @@ export default function DashboardPage() {
               </div>
 
               {/* Goals */}
-              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+              <div 
+                onMouseMove={handleMouseMove}
+                className="glass-card interactive-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all"
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Target className="h-4 w-4 text-rose-400" aria-hidden="true" />
@@ -900,7 +1013,7 @@ export default function DashboardPage() {
                     <div className="space-y-2">
                       {activeGoals.slice(0, 3).map((goal) => (
                         <div key={goal._id} className="flex items-center justify-between bg-white/[0.02] border border-white/[0.04] px-2.5 py-2 rounded-xl text-[10px]">
-                          <span className="truncate text-slate-300 pr-1">{goal.title}</span>
+                           <span className="truncate text-slate-300 pr-1">{goal.title}</span>
                           <span className="text-[9px] text-rose-400 capitalize shrink-0 font-bold">{goal.frequency}</span>
                         </div>
                       ))}
@@ -916,7 +1029,10 @@ export default function DashboardPage() {
               </div>
 
               {/* Monthly Review */}
-              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+              <div 
+                onMouseMove={handleMouseMove}
+                className="glass-card interactive-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all"
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <Sparkles className="h-4 w-4 text-purple-400" aria-hidden="true" />
@@ -943,7 +1059,10 @@ export default function DashboardPage() {
               </div>
 
               {/* Correlations */}
-              <div className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+              <div 
+                onMouseMove={handleMouseMove}
+                className="glass-card interactive-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all"
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4 text-indigo-400" aria-hidden="true" />
@@ -978,22 +1097,26 @@ export default function DashboardPage() {
           <SectionHeader label={`Wellness recommendations for feeling ${detectedEmotion}`} />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {getRecommendationCards(detectedEmotion).map((card, idx) => (
-              <div key={idx} className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+              <div 
+                key={idx} 
+                onMouseMove={handleMouseMove}
+                className="glass-card interactive-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all group duration-300"
+              >
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] text-indigo-400">
+                    <span className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] text-indigo-400 group-hover:rotate-6 transition-transform duration-300">
                       {card.icon}
                     </span>
                     <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{card.category}</p>
                   </div>
                   <div className="space-y-1">
-                    <h3 className="text-xs font-bold text-white">{card.title}</h3>
+                    <h3 className="text-xs font-bold text-white group-hover:text-accent transition-colors duration-300">{card.title}</h3>
                     <p className="text-[11px] leading-relaxed text-slate-400">{card.description}</p>
                   </div>
                 </div>
-                <Link href={card.href} className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                <Link href={card.href} className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors group-hover:text-accent duration-300">
                   <span>{card.actionText}</span>
-                  <ChevronRight className="h-4 w-4" />
+                  <ChevronRight className="h-4 w-4 transform group-hover:translate-x-1 transition-transform" />
                 </Link>
               </div>
             ))}
@@ -1003,7 +1126,10 @@ export default function DashboardPage() {
         {/* ─── 6. Progress and Clinical Assessment ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeInUp stagger-5 opacity-0">
           {/* Progress Stats */}
-          <div className="glass-card rounded-3xl p-6 space-y-4">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 space-y-4"
+          >
             <SectionHeader
               label="Progress telemetry"
               action={
@@ -1027,11 +1153,11 @@ export default function DashboardPage() {
                 <div className="flex items-end justify-between border-b border-white/[0.04] pb-4">
                   <div>
                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Current Score</p>
-                    <p className="text-3xl font-black text-white mt-1">{progressMetrics.currentScore}%</p>
+                    <p className="text-3xl font-black text-white mt-1"><CountUp end={progressMetrics.currentScore} />%</p>
                   </div>
                   <div className="text-right">
                     <p className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Previous Score</p>
-                    <p className="text-xl font-bold text-slate-500 mt-1">{progressMetrics.previousScore}%</p>
+                    <p className="text-xl font-bold text-slate-500 mt-1"><CountUp end={progressMetrics.previousScore} />%</p>
                   </div>
                 </div>
                 <div className="space-y-3.5 text-xs">
@@ -1049,7 +1175,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Latest Assessment */}
-          <div className="glass-card rounded-3xl p-6 space-y-4 flex flex-col justify-between">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 space-y-4 flex flex-col justify-between"
+          >
             <div>
               <SectionHeader
                 label="Latest Clinical Assessment"
@@ -1102,7 +1231,10 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
           {/* Consistency Metrics */}
-          <div className="glass-card rounded-3xl p-6 space-y-5 lg:col-span-1 flex flex-col justify-between">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 space-y-5 lg:col-span-1 flex flex-col justify-between"
+          >
             <div>
               <SectionHeader label="Consistency stats" />
               <div className="grid grid-cols-3 gap-3 text-center pt-2">
@@ -1113,7 +1245,7 @@ export default function DashboardPage() {
                 ].map(({ label, value, unit, color }) => (
                   <div key={label} className={`border rounded-2xl py-3.5 px-2 ${color} flex flex-col justify-center`}>
                     <p className="text-[8px] text-slate-500 font-bold uppercase tracking-wider">{label}</p>
-                    <p className="text-xl font-black leading-none mt-2">{loadingWellness ? "—" : value}</p>
+                    <p className="text-xl font-black leading-none mt-2">{loadingWellness ? "—" : <CountUp end={value} />}</p>
                     <p className="text-[8px] text-slate-500 mt-1 font-semibold">{unit}</p>
                   </div>
                 ))}
@@ -1141,7 +1273,10 @@ export default function DashboardPage() {
           </div>
 
           {/* Achievements badge grid */}
-          <div className="glass-card rounded-3xl p-6 lg:col-span-2 space-y-4">
+          <div 
+            onMouseMove={handleMouseMove}
+            className="glass-card interactive-card rounded-3xl p-6 lg:col-span-2 space-y-4"
+          >
             <SectionHeader
               label="Wellness Achievements"
               action={
@@ -1185,29 +1320,33 @@ export default function DashboardPage() {
         )}
 
         {/* ─── 9. Quick Actions Grid ─── */}
-        <div className="space-y-4">
+        <div className="space-y-4 animate-fadeInUp stagger-5 opacity-0">
           <SectionHeader label="Quick Actions" />
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {[
-              { href: "/assessment", icon: <ClipboardList className="h-5 w-5 text-indigo-400" />, label: "Calibrate Assessment", accent: "hover:border-indigo-500/20 hover:bg-indigo-500/[0.02]" },
-              { href: "/daily-checkin", icon: <Heart className="h-5 w-5 text-rose-400" />, label: "New Daily Check-In", accent: "hover:border-rose-500/20 hover:bg-rose-500/[0.02]" },
-              { href: "/history", icon: <History className="h-5 w-5 text-blue-400" />, label: "Assessment History", accent: "hover:border-blue-500/20 hover:bg-blue-500/[0.02]" },
-              { href: "/consult", icon: <Stethoscope className="h-5 w-5 text-emerald-400" />, label: "Find Care Professional", accent: "hover:border-emerald-500/20 hover:bg-emerald-500/[0.02]" },
-            ].map(({ href, icon, label, accent }) => (
+              { href: "/assessment", icon: <ClipboardList className="h-5 w-5 text-indigo-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />, label: "Calibrate Assessment" },
+              { href: "/daily-checkin", icon: <Heart className="h-5 w-5 text-rose-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />, label: "New Daily Check-In" },
+              { href: "/history", icon: <History className="h-5 w-5 text-blue-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />, label: "Assessment History" },
+              { href: "/consult", icon: <Stethoscope className="h-5 w-5 text-emerald-400 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-300" />, label: "Find Care Professional" },
+            ].map(({ href, icon, label }) => (
               <Link
                 key={href}
                 href={href}
-                className={`flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] text-center transition-all duration-200 ${accent} focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
+                onMouseMove={handleMouseMove}
+                className="flex flex-col items-center justify-center gap-3 p-5 rounded-2xl border border-white/[0.04] bg-white/[0.01] text-center transition-all duration-300 interactive-card group hover:scale-[1.02] hover:-translate-y-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               >
                 {icon}
-                <span className="text-xs font-bold text-slate-300">{label}</span>
+                <span className="text-xs font-bold text-slate-300 group-hover:text-accent transition-colors duration-300">{label}</span>
               </Link>
             ))}
           </div>
         </div>
 
         {/* ─── 10. Professional Therapist Support CTA ─── */}
-        <div className="glass-card rounded-3xl p-6 relative overflow-hidden">
+        <div 
+          onMouseMove={handleMouseMove}
+          className="glass-card interactive-card rounded-3xl p-6 relative overflow-hidden animate-fadeInUp stagger-5 opacity-0"
+        >
           <div className="absolute top-0 right-0 h-40 w-40 bg-emerald-500/5 blur-3xl rounded-full" />
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 relative z-10">
             <div className="flex items-center gap-4">
@@ -1221,7 +1360,7 @@ export default function DashboardPage() {
             </div>
             <Link
               href="/consult"
-              className="shrink-0 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-5 py-3 text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95"
+              className="shrink-0 rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-5 py-3 text-xs font-bold text-white transition-all shadow-md shadow-indigo-500/10 inline-flex items-center gap-1.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 active:scale-95 button-micro"
             >
               <span>Consult Directory</span>
               <ArrowRight className="h-4 w-4" aria-hidden="true" />

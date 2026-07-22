@@ -9,7 +9,7 @@ interface SkeletonProps {
 export function SkeletonLine({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse rounded-lg bg-white/5 ${className}`}
+      className={`living-glass-skeleton rounded-lg bg-white/5 ${className}`}
       aria-hidden="true"
     />
   );
@@ -18,7 +18,7 @@ export function SkeletonLine({ className = "" }: SkeletonProps) {
 export function SkeletonCard({ className = "" }: SkeletonProps) {
   return (
     <div
-      className={`rounded-2xl border border-white/5 bg-slate-900/40 p-6 space-y-4 animate-pulse ${className}`}
+      className={`rounded-2xl border border-white/5 bg-slate-900/40 p-6 space-y-4 living-glass-skeleton ${className}`}
       aria-hidden="true"
       role="status"
       aria-label="Loading..."
@@ -43,7 +43,7 @@ export function SkeletonCard({ className = "" }: SkeletonProps) {
 export function SkeletonAssessmentCard() {
   return (
     <div
-      className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pulse"
+      className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 flex flex-col md:flex-row md:items-center justify-between gap-6 living-glass-skeleton"
       role="status"
       aria-label="Loading assessment..."
     >
@@ -71,7 +71,7 @@ export function SkeletonAssessmentCard() {
 export function SkeletonWellnessCard() {
   return (
     <div
-      className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 space-y-4 animate-pulse"
+      className="rounded-2xl border border-white/5 bg-slate-900/40 p-6 space-y-4 living-glass-skeleton"
       role="status"
       aria-label="Loading wellness record..."
     >

@@ -365,4 +365,92 @@ input:focus, select:focus, textarea:focus {
   }
 }
 
+/* Interactive cursor tracking borders (Spotlight Glows) */
+.interactive-card {
+  position: relative;
+  z-index: 1;
+}
+
+.interactive-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px; /* matches border width */
+  background: radial-gradient(
+    220px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    rgba(var(--accent-rgb), 0.35),
+    transparent 50%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 2;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+  opacity: 0;
+}
+
+.interactive-card:hover::before {
+  opacity: 1;
+}
+
+/* Glass shine surface reflection */
+.interactive-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(
+    350px circle at var(--mouse-x, 0px) var(--mouse-y, 0px),
+    rgba(255, 255, 255, 0.04),
+    transparent 55%
+  );
+  z-index: -1;
+  pointer-events: none;
+  transition: opacity 450ms ease;
+  opacity: 0;
+}
+.interactive-card:hover::after {
+  opacity: 1;
+}
+
+/* Cinematic Living Glass Skeleton Shimmer System */
+.living-glass-skeleton {
+  background: rgba(15, 23, 42, 0.25) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.04) !important;
+  box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.living-glass-skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.03) 20%,
+    rgba(255, 255, 255, 0.08) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmerAnim 2.2s infinite ease-in-out;
+  pointer-events: none;
+}
+
+@keyframes shimmerAnim {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+
+
 
