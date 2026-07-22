@@ -5,8 +5,10 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { ArrowLeft, Bell, BellOff, Clock, Sparkles } from "lucide-react";
 import Link from "next/link";
 import Card from "@/components/Card";
+import { useEmotion } from "@/context/EmotionContext";
 
 export default function SettingsPage() {
+  const { overrideTheme, setManualThemeOverride } = useEmotion();
   const [enabled, setEnabled] = useState(false);
   const [time, setTime] = useState<"morning" | "afternoon" | "evening">("evening");
   const [success, setSuccess] = useState(false);
@@ -115,6 +117,36 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+          </Card>
+
+          <Card className="space-y-4">
+            <div className="flex items-center space-x-3.5 border-b border-white/[0.04] pb-4 mb-2">
+              <Sparkles className="h-5.5 w-5.5 text-indigo-400" />
+              <div>
+                <label className="text-sm font-bold text-white block">Theme Engine Preference</label>
+                <p className="text-xs text-slate-400 mt-0.5">Adapt application mood accents automatically or lock one manually.</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Select Active Theme Mode</label>
+              <select
+                value={overrideTheme === null ? "auto" : overrideTheme}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setManualThemeOverride(val === "auto" ? null : val);
+                }}
+                className="block w-full rounded-2xl border border-white/[0.08] bg-slate-950 px-4 py-3.5 text-xs text-white focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all cursor-pointer"
+              >
+                <option value="auto">✨ Emotion-Adaptive Mode (Auto)</option>
+                <option value="happy">😊 Happy Accent</option>
+                <option value="calm">😌 Calm Accent</option>
+                <option value="focused">🎯 Focused Accent</option>
+                <option value="stressed">😟 Stressed Accent</option>
+                <option value="anxious">😰 Anxious Accent</option>
+                <option value="low_mood">😔 Low Mood Accent</option>
+              </select>
+            </div>
           </Card>
 
           {/* Success banner */}

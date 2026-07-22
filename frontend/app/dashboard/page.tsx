@@ -38,6 +38,8 @@ import { dashboardService, DashboardState, ReasoningState, ActionPlanItem, Contr
 import { journalService, JournalEntry } from "@/services/journal";
 import { goalsService, WellnessGoal } from "@/services/goals";
 import { journeyService, MonthlyReview, CorrelationsState } from "@/services/journey";
+import { useEmotion } from "@/context/EmotionContext";
+import { Bot } from "lucide-react";
 
 // Lazy load heavy components
 const AnalyticsCharts = dynamic(
@@ -200,8 +202,205 @@ function SectionHeader({ label, action }: { label: string; action?: React.ReactN
   );
 }
 
+
+function getGreetingForEmotion(emotion: string): string {
+  switch (emotion) {
+    case "Happy":
+      return "You're making great progress today. Keep it up!";
+    case "Calm":
+      return "Welcome back. Let's continue building healthy habits.";
+    case "Focused":
+      return "You're in a productive mindset today.";
+    case "Stressed":
+      return "Take a deep breath. Let's focus on one step at a time.";
+    case "Anxious":
+      return "Take a gentle pause. Let's focus on relaxation and grounding.";
+    case "Low Mood":
+      return "Small steps matter. We're here to support your journey.";
+    default:
+      return "Welcome back to your personalized wellness workspace.";
+  }
+}
+
+function getRecommendationCards(emotion: string) {
+  switch (emotion) {
+    case "Low Mood":
+      return [
+        {
+          category: "Journaling",
+          title: "Write a Gratitude Entry",
+          description: "List three small positive things in your life to lift your emotional vitality.",
+          actionText: "Write Entry",
+          href: "/journal",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+        {
+          category: "Coaching",
+          title: "Check in with AI Coach",
+          description: "Talk to your AI Coach about how you are feeling. It can offer gentle coaching guidance.",
+          actionText: "Talk to Coach",
+          href: "/coach",
+          icon: <Bot className="h-4 w-4" />,
+        },
+        {
+          category: "Care Network",
+          title: "Find Support Near You",
+          description: "Search trusted mental health professionals, therapists, and psychologists.",
+          actionText: "Search Locator",
+          href: "/consult",
+          icon: <Stethoscope className="h-4 w-4" />,
+        },
+      ];
+    case "Stressed":
+      return [
+        {
+          category: "Breathe",
+          title: "Try Boxed Breathing",
+          description: "Practice a simple 4-second box breathing cycle to calm your nervous system.",
+          actionText: "Start Breathing",
+          href: "/daily-checkin",
+          icon: <Heart className="h-4 w-4" />,
+        },
+        {
+          category: "Mindfulness",
+          title: "Self-Reflection Pause",
+          description: "Spend 5 minutes in silent mindfulness to ground your thoughts.",
+          actionText: "Reflect Now",
+          href: "/journal",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+        {
+          category: "Coaching",
+          title: "Decompress with AI Coach",
+          description: "Ask the coach for stress management techniques tailored to your situation.",
+          actionText: "Chat with Coach",
+          href: "/coach",
+          icon: <Bot className="h-4 w-4" />,
+        },
+      ];
+    case "Anxious":
+      return [
+        {
+          category: "Grounding",
+          title: "5-4-3-2-1 Technique",
+          description: "Identify 5 things you see, 4 you feel, 3 you hear, 2 you smell, and 1 you taste.",
+          actionText: "Try Grounding",
+          href: "/journal",
+          icon: <Sparkles className="h-4 w-4" />,
+        },
+        {
+          category: "Coaching",
+          title: "Speak with AI Coach",
+          description: "Discuss your anxious thoughts in a private space for supportive guidance.",
+          actionText: "Talk to Coach",
+          href: "/coach",
+          icon: <Bot className="h-4 w-4" />,
+        },
+        {
+          category: "Breathe",
+          title: "Slow Paced Breathing",
+          description: "Inhale for 4 seconds, hold for 2, exhale for 6, hold for 2.",
+          actionText: "Breathe Slowly",
+          href: "/daily-checkin",
+          icon: <Heart className="h-4 w-4" />,
+        },
+      ];
+    case "Happy":
+      return [
+        {
+          category: "Streak",
+          title: "Celebrate Your Streak",
+          description: "Fantastic progress! Keep your wellness check-in consistency alive.",
+          actionText: "Check Streak",
+          href: "/daily-history",
+          icon: <Heart className="h-4 w-4" />,
+        },
+        {
+          category: "Goals",
+          title: "Set a New Wellness Goal",
+          description: "Build on your positive momentum by adding a healthy new goal.",
+          actionText: "Add Goal",
+          href: "/goals",
+          icon: <Target className="h-4 w-4" />,
+        },
+        {
+          category: "Reflect",
+          title: "Capture the Joy",
+          description: "Write down what went well today in your journal so you can read it later.",
+          actionText: "Write Journal",
+          href: "/journal",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+      ];
+    case "Focused":
+      return [
+        {
+          category: "Goals",
+          title: "Review Today's Goals",
+          description: "Align your energy with your goals and tick off tasks.",
+          actionText: "Review Goals",
+          href: "/goals",
+          icon: <Target className="h-4 w-4" />,
+        },
+        {
+          category: "Reflect",
+          title: "Log Your Deep Focus",
+          description: "Write down your productivity achievements in your journal.",
+          actionText: "Log Focus",
+          href: "/journal",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+        {
+          category: "Habits",
+          title: "Log Daily Habits",
+          description: "Confirm hydration, meals, and exercise to maintain your momentum.",
+          actionText: "Check In",
+          href: "/daily-checkin",
+          icon: <Heart className="h-4 w-4" />,
+        },
+      ];
+    case "Calm":
+    default:
+      return [
+        {
+          category: "Move",
+          title: "Light Stretching Session",
+          description: "Do a simple 10-minute stretch to maintain high flexibility.",
+          actionText: "Log Activity",
+          href: "/daily-checkin",
+          icon: <Heart className="h-4 w-4" />,
+        },
+        {
+          category: "Reflect",
+          title: "Mindful Journaling",
+          description: "Reflect on this state of calm to anchor it in your memory.",
+          actionText: "Write Entry",
+          href: "/journal",
+          icon: <BookOpen className="h-4 w-4" />,
+        },
+        {
+          category: "Hydration",
+          title: "Refill Your Water",
+          description: "Ensure you meet your daily hydration target of at least 2 liters.",
+          actionText: "Log Hydration",
+          href: "/daily-checkin",
+          icon: <Clock className="h-4 w-4" />,
+        },
+      ];
+  }
+}
+
 export default function DashboardPage() {
   const { user } = useAuth();
+  const {
+    detectedEmotion,
+    theme: activeThemeName,
+    explanation,
+    advice,
+    motivation,
+    showSupportRecommendation,
+    history: emotionHistory,
+  } = useEmotion();
   const { data: assessments, isLoading: loadingAssessments } = useAssessments(5);
 
   const [todayCheckedIn, setTodayCheckedIn] = useState(false);
@@ -332,8 +531,9 @@ export default function DashboardPage() {
             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">
               {getGreeting()}, {user?.full_name?.split(" ")[0] || "there"} 👋
             </h1>
-            <p className="text-xs text-slate-400 leading-relaxed max-w-md">
-              Welcome back to your personalized wellness workspace. Let&apos;s review today&apos;s patterns.
+            <p className="text-xs text-indigo-400 font-bold tracking-tight mt-1 flex items-center gap-1.5">
+              <Sparkles className="h-3.5 w-3.5 animate-pulse" />
+              <span>{getGreetingForEmotion(detectedEmotion)}</span>
             </p>
           </div>
 
@@ -364,6 +564,105 @@ export default function DashboardPage() {
             </Link>
           </div>
         </div>
+
+        {/* ─── Emotion-Adaptive Synthesis Panel ─── */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+          {/* watsonx Granite Sentiment Synthesizer Card */}
+          <div className="lg:col-span-2 glass-card rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between border-l-4 border-l-accent">
+            <div className="absolute top-0 right-0 h-32 w-32 bg-accent/5 blur-3xl rounded-full" />
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <div className="h-8 w-8 rounded-xl bg-accent/15 border border-accent/25 flex items-center justify-center text-accent">
+                    <Sparkles className="h-4 w-4 animate-pulse" />
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-bold text-accent uppercase tracking-widest">Cognitive State Synthesis</p>
+                    <h2 className="text-sm font-bold text-white mt-0.5">Current Emotion: {detectedEmotion}</h2>
+                  </div>
+                </div>
+                <span className="rounded-full bg-accent/15 px-3 py-1 text-[10px] font-bold text-accent border border-accent/25 flex items-center gap-1.5 capitalize">
+                  {activeThemeName.replace('_', ' ')} theme active
+                </span>
+              </div>
+
+              <div className="space-y-2 pt-1">
+                <p className="text-xs text-slate-300 leading-relaxed font-semibold">
+                  {explanation || "Your cognitive metrics reflect a calm and balanced state of mind."}
+                </p>
+                <p className="text-xs text-slate-400 leading-relaxed pt-0.5">
+                  <span className="font-bold text-accent">Personalized Advice:</span> {advice || "Engage in mindfulness checks and stick to your hydration goal."}
+                </p>
+              </div>
+            </div>
+
+            {motivation && (
+              <div className="mt-4 pt-3 border-t border-white/[0.04] text-[10px] text-slate-400 italic">
+                &ldquo;{motivation}&rdquo;
+              </div>
+            )}
+          </div>
+
+          {/* Emotion History Timeline Card */}
+          <div className="glass-card rounded-3xl p-6 flex flex-col justify-between">
+            <div className="space-y-3.5">
+              <div className="flex items-center gap-2 border-b border-white/[0.04] pb-2">
+                <History className="h-4 w-4 text-slate-500" />
+                <p className="text-[9px] font-bold text-slate-500 uppercase tracking-wider">Emotion History</p>
+              </div>
+              {emotionHistory && emotionHistory.length > 0 ? (
+                <div className="space-y-3 max-h-[140px] overflow-y-auto no-scrollbar">
+                  {emotionHistory.slice(0, 4).map((entry, idx) => {
+                    const entryDate = entry.date;
+                    let friendlyName = entryDate;
+                    try {
+                      const d = new Date(entryDate);
+                      if (!isNaN(d.getTime())) {
+                        friendlyName = d.toLocaleDateString("en-US", { weekday: 'long', month: 'short', day: 'numeric' });
+                      }
+                    } catch {}
+                    return (
+                      <div key={idx} className="flex items-center justify-between text-xs py-1 border-b border-white/[0.02] last:border-0">
+                        <span className="text-slate-400 font-medium">{friendlyName}</span>
+                        <span className="font-bold text-slate-200 flex items-center gap-1.5">
+                          {entry.detected_emotion === "Happy" && "😊"}
+                          {entry.detected_emotion === "Calm" && "😌"}
+                          {entry.detected_emotion === "Focused" && "🎯"}
+                          {entry.detected_emotion === "Stressed" && "😟"}
+                          {entry.detected_emotion === "Anxious" && "😰"}
+                          {entry.detected_emotion === "Low Mood" && "😔"}
+                          <span>{entry.detected_emotion}</span>
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-600 text-center py-6">No historical entries recorded.</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* ─── Clinical Care locator Warning ─── */}
+        {showSupportRecommendation && (
+          <div className="rounded-3xl border border-rose-500/20 bg-rose-500/5 p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 backdrop-blur-xl animate-fadeIn">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-rose-400 font-bold text-xs uppercase tracking-wider">
+                <ShieldAlert className="h-4 w-4" />
+                <span>Supportive Care Resource</span>
+              </div>
+              <p className="text-xs text-slate-300 leading-relaxed max-w-2xl">
+                Professional support may be helpful. You can explore our Health Support section to find qualified mental health professionals.
+              </p>
+            </div>
+            <Link href="/consult" className="shrink-0">
+              <button className="rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2.5 px-5 transition-all border border-rose-500/20 active:scale-95">
+                Explore Health Support
+              </button>
+            </Link>
+          </div>
+        )}
 
         {/* ─── 2. Vitals deck & Wellness Score Gauge ─── */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -673,6 +972,33 @@ export default function DashboardPage() {
             </div>
           </div>
         )}
+
+        {/* ─── Contextual Wellness Recommendations ─── */}
+        <div className="space-y-4 animate-fadeIn">
+          <SectionHeader label={`Wellness recommendations for feeling ${detectedEmotion}`} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {getRecommendationCards(detectedEmotion).map((card, idx) => (
+              <div key={idx} className="glass-card rounded-3xl p-5 flex flex-col justify-between gap-5 hover:border-white/[0.08] transition-all">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-2 rounded-xl bg-white/[0.02] border border-white/[0.04] text-indigo-400">
+                      {card.icon}
+                    </span>
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider">{card.category}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <h3 className="text-xs font-bold text-white">{card.title}</h3>
+                    <p className="text-[11px] leading-relaxed text-slate-400">{card.description}</p>
+                  </div>
+                </div>
+                <Link href={card.href} className="flex items-center justify-between text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  <span>{card.actionText}</span>
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+            ))}
+          </div>
+        </div>
 
         {/* ─── 6. Progress and Clinical Assessment ─── */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

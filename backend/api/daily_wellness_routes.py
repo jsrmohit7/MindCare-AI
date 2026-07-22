@@ -19,6 +19,8 @@ from repositories.activity_repository import ActivityRepository
 from repositories.wellness_state_repository import WellnessStateRepository
 
 
+from core.logging import logger
+
 router = APIRouter(tags=["Daily Wellness"])
 
 @router.post("/daily-checkin", status_code=status.HTTP_201_CREATED)
@@ -73,6 +75,15 @@ async def create_daily_checkin(
 
     # Mark cached state dirty
     await state_repo.set_dirty(user_id, True)
+
+    # Recalculate adaptive theme emotion
+    try:
+        from api.adaptive_theme_routes import get_adaptive_theme_service
+        from config.database import get_database
+        theme_service = await get_adaptive_theme_service(db=get_database())
+        await theme_service.calculate_and_save_user_emotion(user_id)
+    except Exception as e:
+        logger.error("Failed to automatically update user adaptive theme: %s", e)
 
     return {"id": doc_id, "wellness_score": score, **ai_report}
 
@@ -142,6 +153,15 @@ async def update_today_checkin(
 
     # Mark cached state dirty
     await state_repo.set_dirty(user_id, True)
+
+    # Recalculate adaptive theme emotion
+    try:
+        from api.adaptive_theme_routes import get_adaptive_theme_service
+        from config.database import get_database
+        theme_service = await get_adaptive_theme_service(db=get_database())
+        await theme_service.calculate_and_save_user_emotion(user_id)
+    except Exception as e:
+        logger.error("Failed to automatically update user adaptive theme: %s", e)
 
     return {"wellness_score": score, **ai_report}
 

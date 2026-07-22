@@ -3,6 +3,8 @@ import { Inter } from "next/font/google";
 import QueryProvider from "@/components/QueryProvider";
 import { AuthProvider } from "@/context/AuthContext";
 import AppShell from "@/components/AppShell";
+import { EmotionProvider } from "@/context/EmotionContext";
+import { AdaptiveThemeProvider } from "@/components/AdaptiveThemeProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -30,7 +32,11 @@ export default function RootLayout({
       >
         <QueryProvider>
           <AuthProvider>
-            <AppShell>{children}</AppShell>
+            <EmotionProvider>
+              <AdaptiveThemeProvider>
+                <AppShell>{children}</AppShell>
+              </AdaptiveThemeProvider>
+            </EmotionProvider>
           </AuthProvider>
         </QueryProvider>
       </body>

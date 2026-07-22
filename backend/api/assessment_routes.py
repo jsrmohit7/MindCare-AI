@@ -12,6 +12,8 @@ from services.response_validator import GraniteValidationError
 from services.auth import get_current_user
 
 
+from core.logging import logger
+
 router = APIRouter(
     prefix="/assessments",
     tags=["Assessments"],
@@ -72,6 +74,15 @@ async def create_assessment(
         
         # Set cache to dirty
         await state_repo.set_dirty(user_id, True)
+
+        # Recalculate adaptive theme emotion
+        try:
+            from api.adaptive_theme_routes import get_adaptive_theme_service
+            from config.database import get_database
+            theme_service = await get_adaptive_theme_service(db=get_database())
+            await theme_service.calculate_and_save_user_emotion(user_id)
+        except Exception as e:
+            logger.error("Failed to automatically update user adaptive theme: %s", e)
         
         return res
 

@@ -27,6 +27,7 @@ from api.monthly_review_routes import router as monthly_review_router
 from api.correlation_routes import router as correlation_router
 from api.privacy_routes import router as privacy_router
 from api.admin_routes import router as admin_router
+from api.adaptive_theme_routes import router as adaptive_theme_router
 
 
 
@@ -139,6 +140,8 @@ def create_app() -> FastAPI:
     fastapi_app.include_router(privacy_router, prefix="/api/v1")
     # Admin Panel Prefix: /api/v1
     fastapi_app.include_router(admin_router, prefix="/api/v1")
+    # Adaptive Theme Prefix: /api/v1
+    fastapi_app.include_router(adaptive_theme_router, prefix="/api/v1")
 
 
 
