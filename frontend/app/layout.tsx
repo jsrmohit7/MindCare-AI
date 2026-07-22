@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark h-full">
       <body
-        className={`${inter.variable} font-sans antialiased h-full bg-[#030712] text-slate-100`}
+        className={`${inter.variable} font-sans antialiased h-full bg-[var(--background)] text-slate-100 transition-colors duration-[800ms]`}
       >
         <QueryProvider>
           <AuthProvider>

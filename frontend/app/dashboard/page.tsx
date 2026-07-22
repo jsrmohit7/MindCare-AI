@@ -525,7 +525,7 @@ export default function DashboardPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         {/* ─── 1. Header: Greeting + Streak ─── */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fadeInUp stagger-1 opacity-0">
           <div className="space-y-1.5">
             <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{getTodayDate()}</p>
             <h1 className="text-2xl font-extrabold text-white tracking-tight sm:text-3xl">
@@ -566,7 +566,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── Emotion-Adaptive Synthesis Panel ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeIn">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeInUp stagger-2 opacity-0">
           {/* watsonx Granite Sentiment Synthesizer Card */}
           <div className="lg:col-span-2 glass-card rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between border-l-4 border-l-accent">
             <div className="absolute top-0 right-0 h-32 w-32 bg-accent/5 blur-3xl rounded-full" />
@@ -665,7 +665,7 @@ export default function DashboardPage() {
         )}
 
         {/* ─── 2. Vitals deck & Wellness Score Gauge ─── */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fadeInUp stagger-3 opacity-0">
           {/* Score card */}
           <div className="glass-card rounded-3xl p-6 flex flex-col justify-between gap-6 relative overflow-hidden">
             <div className="absolute top-0 right-0 h-32 w-32 bg-indigo-500/5 blur-3xl rounded-full" />
@@ -974,7 +974,7 @@ export default function DashboardPage() {
         )}
 
         {/* ─── Contextual Wellness Recommendations ─── */}
-        <div className="space-y-4 animate-fadeIn">
+        <div className="space-y-4 animate-fadeInUp stagger-4 opacity-0">
           <SectionHeader label={`Wellness recommendations for feeling ${detectedEmotion}`} />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {getRecommendationCards(detectedEmotion).map((card, idx) => (
@@ -1001,7 +1001,7 @@ export default function DashboardPage() {
         </div>
 
         {/* ─── 6. Progress and Clinical Assessment ─── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-fadeInUp stagger-5 opacity-0">
           {/* Progress Stats */}
           <div className="glass-card rounded-3xl p-6 space-y-4">
             <SectionHeader

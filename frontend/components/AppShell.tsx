@@ -5,6 +5,7 @@ import { useAuth } from "@/context/AuthContext";
 import { usePathname } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import MobileNav from "@/components/MobileNav";
+import { AmbientBackground } from "@/components/AmbientBackground";
 
 // Pages that should use the full-width public layout (no sidebar)
 const PUBLIC_ROUTES = ["/login", "/register", "/"];
@@ -23,16 +24,21 @@ export default function AppShell({ children }: AppShellProps) {
   // For public routes or unauthenticated users, render without sidebar
   if (isPublicRoute || !user) {
     return (
-      <div className="min-h-screen flex flex-col">
-        {children}
+      <div className="min-h-screen flex flex-col relative">
+        <AmbientBackground />
+        <div className="relative z-10 flex flex-col min-h-screen">
+          {children}
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#030712]">
+    <div className="flex h-screen overflow-hidden bg-[var(--background)] relative">
+      <AmbientBackground />
+      
       {/* Desktop Sidebar */}
-      <div className="hidden md:flex md:flex-shrink-0">
+      <div className="hidden md:flex md:flex-shrink-0 relative z-20">
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed((v) => !v)}
@@ -40,7 +46,7 @@ export default function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex flex-1 flex-col min-w-0 overflow-hidden">
+      <div className="flex flex-1 flex-col min-w-0 overflow-hidden relative z-10">
         {/* Scrollable content */}
         <main
           className="flex-1 overflow-y-auto pb-20 md:pb-0"
@@ -54,7 +60,9 @@ export default function AppShell({ children }: AppShellProps) {
       </div>
 
       {/* Mobile Bottom Navigation */}
-      <MobileNav />
+      <div className="relative z-20">
+        <MobileNav />
+      </div>
     </div>
   );
 }

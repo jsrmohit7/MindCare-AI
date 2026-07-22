@@ -26,6 +26,7 @@ import {
   Clock,
   X
 } from "lucide-react";
+
 import Link from "next/link";
 
 // Simple custom Markdown rendering function
@@ -483,9 +484,18 @@ export default function CoachPage() {
               >
                 {sidebarOpen ? <ChevronLeft className="h-4.5 w-4.5" /> : <ChevronRight className="h-4.5 w-4.5" />}
               </button>
+              
+              {/* Glowing Interactive Halo Avatar */}
+              <div className="relative group cursor-pointer flex h-9.5 w-9.5 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500/10 to-purple-500/10 border border-indigo-500/20 text-indigo-400 transition-all duration-300 hover:scale-105 hover:border-accent/40 shadow-[0_0_15px_rgba(var(--accent-rgb),0.05)]">
+                {/* Breathing Halo Glow Effect */}
+                <div className="absolute inset-[-2px] rounded-[18px] bg-accent/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-[3px]" />
+                <div className="absolute inset-0 rounded-2xl border border-accent/20 animate-pulse" />
+                <Bot className="h-4.5 w-4.5 text-accent" />
+              </div>
+
               <div>
                 <h1 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                  🤖 AI Wellness Companion
+                  AI Wellness Companion
                 </h1>
                 <p className="text-[10px] text-slate-500 mt-0.5">Reflective support driven by Watsonx Granite AI</p>
               </div>
