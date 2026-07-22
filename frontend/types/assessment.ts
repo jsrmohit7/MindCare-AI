@@ -101,6 +101,8 @@ export interface RiskProfile {
 
 export interface AssessmentResponse {
   id: string;
+  created_at?: string;
+  status?: string;
   risk_profile: RiskProfile;
   ai_analysis: AIAnalysis;
   metadata: MetadataInfo;

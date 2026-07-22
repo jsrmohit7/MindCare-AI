@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import dynamic from "next/dynamic";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { AIPresenceOrb } from "@/components/AIPresenceOrb";
 import { useAuth } from "@/context/AuthContext";
 import { useAssessments } from "@/hooks/useAssessments";
 import {
@@ -284,119 +285,7 @@ function TypewriterInsight({ text }: { text: string }) {
   );
 }
 
-function AIPresenceOrb() {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null);
-
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
-
-    let animationFrameId: number;
-    const width = canvas.width = 120;
-    const height = canvas.height = 120;
-
-    const getAccentColor = () => {
-      if (typeof window !== "undefined") {
-        const bodyStyles = window.getComputedStyle(document.body);
-        return bodyStyles.getPropertyValue("--accent").trim() || "#6366f1";
-      }
-      return "#6366f1";
-    };
-
-    interface Particle {
-      x: number;
-      y: number;
-      vx: number;
-      vy: number;
-      radius: number;
-    }
-
-    const particles: Particle[] = [];
-    const particleCount = 18;
-    for (let i = 0; i < particleCount; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        vx: (Math.random() - 0.5) * 0.4,
-        vy: (Math.random() - 0.5) * 0.4,
-        radius: Math.random() * 1.5 + 1,
-      });
-    }
-
-    let angle = 0;
-    const render = () => {
-      ctx.clearRect(0, 0, width, height);
-      const accent = getAccentColor();
-
-      const outerGlow = ctx.createRadialGradient(width / 2, height / 2, 5, width / 2, height / 2, 50);
-      outerGlow.addColorStop(0, `${accent}35`);
-      outerGlow.addColorStop(1, `${accent}00`);
-      ctx.fillStyle = outerGlow;
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, 50, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = `${accent}15`;
-      ctx.lineWidth = 0.5;
-      for (let i = 0; i < particleCount; i++) {
-        for (let j = i + 1; j < particleCount; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 35) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
-
-      ctx.fillStyle = `${accent}80`;
-      particles.forEach((p) => {
-        p.x += p.vx;
-        p.y += p.vy;
-
-        if (p.x < 10 || p.x > width - 10) p.vx *= -1;
-        if (p.y < 10 || p.y > height - 10) p.vy *= -1;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fill();
-      });
-
-      angle += 0.04;
-      const pulseRadius = 15 + Math.sin(angle) * 2;
-      const coreGlow = ctx.createRadialGradient(width / 2, height / 2, 2, width / 2, height / 2, pulseRadius);
-      coreGlow.addColorStop(0, "#ffffff");
-      coreGlow.addColorStop(0.3, `${accent}dd`);
-      coreGlow.addColorStop(1, `${accent}00`);
-
-      ctx.fillStyle = coreGlow;
-      ctx.beginPath();
-      ctx.arc(width / 2, height / 2, pulseRadius, 0, Math.PI * 2);
-      ctx.fill();
-
-      animationFrameId = requestAnimationFrame(render);
-    };
-
-    render();
-
-    return () => {
-      cancelAnimationFrame(animationFrameId);
-    };
-  }, []);
-
-  return (
-    <div className="relative h-28 w-28 flex items-center justify-center bg-white/[0.01] border border-white/[0.03] rounded-full shadow-[0_0_20px_rgba(var(--accent-rgb),0.02)] shrink-0">
-      <div className="absolute inset-2 rounded-full border border-dashed border-accent/15 animate-spin" style={{ animationDuration: "30s" }} />
-      <div className="absolute inset-4 rounded-full border border-accent/10 animate-spin" style={{ animationDuration: "15s", animationDirection: "reverse" }} />
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
-    </div>
-  );
-}
+// AIPresenceOrb imported from @/components/AIPresenceOrb
 
 interface TimelineItemProps {
   label: string;

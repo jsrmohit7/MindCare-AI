@@ -1,83 +1,84 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { goalsService, WellnessGoal } from "@/services/goals";
-import { Plus, Check, Trash2, Sparkles, Award, Target, Flame, Loader2 } from "lucide-react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import Card from "@/components/Card";
+import { useEmotion } from "@/context/EmotionContext";
+import { goalsService, WellnessGoal } from "@/services/goals";
+import { dailyWellnessService } from "@/services/dailyWellness";
+
+import { GoalsHero } from "@/components/goals/GoalsHero";
+import { ProgressConstellation } from "@/components/goals/ProgressConstellation";
+import { WellnessJourney } from "@/components/goals/WellnessJourney";
+import { GoalCard } from "@/components/goals/GoalCard";
+import { GoalCompanion } from "@/components/goals/GoalCompanion";
+import { AchievementPanel } from "@/components/goals/AchievementPanel";
+import { GoalEmptyState } from "@/components/goals/GoalEmptyState";
+
+import { Plus, Target, Flame, Loader2, X } from "lucide-react";
 import Button from "@/components/Button";
 
-// ─── Goal type → color mapping ───────────────────────────────────────────────
-const TYPE_ACCENTS: Record<string, string> = {
-  sleep: "text-blue-400 bg-blue-500/10 border-blue-500/20",
-  exercise: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20",
-  meditation: "text-violet-400 bg-violet-500/10 border-violet-500/20",
-  hydration: "text-cyan-400 bg-cyan-500/10 border-cyan-500/20",
-  mood: "text-rose-400 bg-rose-500/10 border-rose-500/20",
-  custom: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-};
-
-const FREQ_COLORS: Record<string, string> = {
-  daily: "text-amber-400 bg-amber-500/10 border-amber-500/20",
-  weekly: "text-indigo-400 bg-indigo-500/10 border-indigo-500/20",
-};
-
-function TypeBadge({ type }: { type: string }) {
-  const cls = TYPE_ACCENTS[type] ?? TYPE_ACCENTS.custom;
-  return (
-    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${cls} tracking-wider`}>
-      {type}
-    </span>
-  );
-}
-
-function FreqBadge({ freq }: { freq: string }) {
-  const cls = FREQ_COLORS[freq] ?? FREQ_COLORS.daily;
-  return (
-    <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full border ${cls} tracking-wider`}>
-      {freq}
-    </span>
-  );
-}
-
 export default function GoalsPage() {
+  const { detectedEmotion, explanation, motivation } = useEmotion();
+
+  // Mounted & Cinematic entrance state
+  const [mounted, setMounted] = useState(false);
+  const [entranceStep, setEntranceStep] = useState(0);
+
+  // Goals Data State
   const [goals, setGoals] = useState<WellnessGoal[]>([]);
   const [suggestedGoals, setSuggestedGoals] = useState<WellnessGoal[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [streakDays, setStreakDays] = useState(0);
+
+  // Create Goal Form Modal / Accordion State
+  const [showCreateForm, setShowCreateForm] = useState(false);
   const [title, setTitle] = useState("");
   const [type, setType] = useState("custom");
   const [targetValue, setTargetValue] = useState(1.0);
   const [frequency, setFrequency] = useState("daily");
-  const [loading, setLoading] = useState(true);
-  const [submitting, setSubmitting] = useState(false);
-  const [loadingSuggestions, setLoadingSuggestions] = useState(true);
 
+  // Selected Goal for Constellation highlight
+  const [selectedGoal, setSelectedGoal] = useState<WellnessGoal | null>(null);
+
+  // Staggered Entrance Animation Pipeline
   useEffect(() => {
-    loadGoals();
-    loadSuggestions();
+    setMounted(true);
+    const timers = [
+      setTimeout(() => setEntranceStep(1), 150),
+      setTimeout(() => setEntranceStep(2), 350),
+      setTimeout(() => setEntranceStep(3), 600),
+      setTimeout(() => setEntranceStep(4), 850),
+    ];
+    return () => timers.forEach((t) => clearTimeout(t));
   }, []);
 
-  const loadGoals = async () => {
+  // Fetch Goals, Suggestions, and Streak
+  const loadGoalsData = useCallback(async () => {
     try {
-      const data = await goalsService.listGoals();
-      setGoals(data);
+      const [goalsData, suggestionsData, streakData] = await Promise.all([
+        goalsService.listGoals(),
+        goalsService.getSuggestedGoals(),
+        dailyWellnessService.getStreak(),
+      ]);
+
+      setGoals(goalsData);
+      setSuggestedGoals(suggestionsData);
+      setStreakDays(streakData.current_streak || 0);
     } catch (err) {
-      console.error("Failed to load goals:", err);
+      console.error("Failed to load goals data:", err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const loadSuggestions = async () => {
-    try {
-      const data = await goalsService.getSuggestedGoals();
-      setSuggestedGoals(data);
-    } catch (err) {
-      console.error("Failed to load suggested goals:", err);
-    } finally {
       setLoadingSuggestions(false);
     }
-  };
+  }, []);
 
+  useEffect(() => {
+    loadGoalsData();
+  }, [loadGoalsData]);
+
+  // Create Goal Handler
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
@@ -88,7 +89,8 @@ export default function GoalsPage() {
       setType("custom");
       setTargetValue(1.0);
       setFrequency("daily");
-      await loadGoals();
+      setShowCreateForm(false);
+      await loadGoalsData();
     } catch (err) {
       console.error("Failed to create goal:", err);
     } finally {
@@ -96,6 +98,7 @@ export default function GoalsPage() {
     }
   };
 
+  // Adopt AI Suggested Goal Handler
   const handleAdoptSuggested = async (suggested: WellnessGoal) => {
     try {
       await goalsService.createGoal(
@@ -105,282 +108,273 @@ export default function GoalsPage() {
         suggested.frequency,
         true
       );
-      setSuggestedGoals(suggestedGoals.filter((s) => s.title !== suggested.title));
-      await loadGoals();
+      setSuggestedGoals((prev) => prev.filter((s) => s.title !== suggested.title));
+      await loadGoalsData();
     } catch (err) {
       console.error("Failed to adopt suggested goal:", err);
     }
   };
 
+  // Complete Goal Handler
   const handleComplete = async (id: string) => {
     try {
       await goalsService.completeGoal(id);
-      await loadGoals();
+      await loadGoalsData();
     } catch (err) {
       console.error("Failed to complete goal:", err);
     }
   };
 
+  // Delete Goal Handler
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this goal?")) return;
+    if (!confirm("Are you sure you want to delete this objective?")) return;
     try {
       await goalsService.deleteGoal(id);
-      await loadGoals();
+      await loadGoalsData();
     } catch (err) {
       console.error("Failed to delete goal:", err);
     }
   };
 
-  const activeGoals = goals.filter((g) => g.status === "active");
-  const completedGoals = goals.filter((g) => g.status === "completed");
+  // Emotion-adaptive goal prioritization
+  const activeGoals = useMemo(() => {
+    const rawActive = goals.filter((g) => g.status === "active");
+    
+    // Emotion-specific priority weights
+    const priorityMap: Record<string, string[]> = {
+      Happy: ["exercise", "hydration", "custom", "meditation"],
+      Calm: ["meditation", "sleep", "custom", "hydration"],
+      Focused: ["exercise", "hydration", "custom", "sleep"],
+      Stressed: ["meditation", "sleep", "hydration", "custom"],
+      Anxious: ["meditation", "sleep", "mood", "custom"],
+      "Low Mood": ["custom", "mood", "meditation", "sleep"],
+    };
+
+    const priorities = priorityMap[detectedEmotion] || priorityMap["Calm"];
+
+    return [...rawActive].sort((a, b) => {
+      const idxA = priorities.indexOf(a.type);
+      const idxB = priorities.indexOf(b.type);
+      const weightA = idxA === -1 ? 99 : idxA;
+      const weightB = idxB === -1 ? 99 : idxB;
+      return weightA - weightB;
+    });
+  }, [goals, detectedEmotion]);
+
+  const completedGoals = useMemo(() => {
+    return goals.filter((g) => g.status === "completed");
+  }, [goals]);
 
   return (
     <ProtectedRoute>
-      <div className="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8">
-
-        {/* Header */}
-        <div className="space-y-1.5 border-b border-white/[0.04] pb-6">
-          <h1 className="text-2xl font-extrabold text-white tracking-tight flex items-center gap-2.5">
-            <Target className="h-6 w-6 text-rose-400" aria-hidden="true" />
-            Wellness Goals
-          </h1>
-          <p className="text-xs text-slate-400 leading-relaxed">Build healthy habits, complete milestones, and adopt Watsonx AI suggested objectives.</p>
+      <div
+        className={`max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 space-y-8 transition-all duration-700 ${
+          mounted ? "opacity-100 scale-100" : "opacity-0 scale-[0.98]"
+        }`}
+      >
+        {/* Step 1: Living Hero */}
+        <div className={`transition-all duration-500 ${entranceStep >= 1 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+          <GoalsHero
+            emotion={detectedEmotion}
+            activeCount={activeGoals.length}
+            completedCount={completedGoals.length}
+            streakDays={streakDays}
+            scorePreview={88}
+            motivationSnippet={motivation || explanation}
+          />
         </div>
 
-        {/* Summary Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
-          {[
-            { label: "Active", value: activeGoals.length, color: "text-indigo-400" },
-            { label: "Completed", value: completedGoals.length, color: "text-emerald-400" },
-            { label: "AI Suggestions", value: suggestedGoals.length, color: "text-purple-400" },
-          ].map(({ label, value, color }) => (
-            <div key={label} className="bg-slate-900/40 border border-white/[0.05] rounded-3xl p-5 text-center shadow-inner relative overflow-hidden">
-              <div className="absolute top-0 right-0 h-16 w-16 bg-white/[0.01] blur-2xl rounded-full" />
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{label}</p>
-              <p className={`text-2xl font-black mt-1.5 ${color}`}>{loading ? "—" : value}</p>
-            </div>
-          ))}
-        </div>
+        {/* Step 2: Progress Constellation Signature Feature */}
+        {goals.length > 0 && (
+          <div className={`transition-all duration-500 ${entranceStep >= 2 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            <ProgressConstellation
+              goals={goals}
+              onSelectGoal={(g) => setSelectedGoal(selectedGoal?._id === g._id ? null : g)}
+            />
+          </div>
+        )}
 
+        {/* Empty State when no goals exist */}
+        {goals.length === 0 && !loading && (
+          <GoalEmptyState
+            emotion={detectedEmotion}
+            onOpenCreateForm={() => setShowCreateForm(true)}
+          />
+        )}
+
+        {/* Step 3: Main Layout Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-          {/* Left: Form + AI Suggestions */}
-          <div className="lg:col-span-4 space-y-6">
-
-            {/* Create Goal Form */}
-            <Card className="space-y-4">
-              <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider border-b border-white/[0.04] pb-3">
-                <Plus className="h-4 w-4 text-indigo-400" aria-hidden="true" />
-                New Goal
-              </h2>
-              <form onSubmit={handleCreate} className="space-y-3.5 text-xs">
-                <div className="space-y-2">
-                  <label htmlFor="goal-title" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Title
-                  </label>
-                  <input
-                    id="goal-title"
-                    type="text"
-                    placeholder="e.g. 7 hours sleep, morning walk…"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                  />
+          
+          {/* Left Column: Create Form & Goal Companion */}
+          <div className={`lg:col-span-4 space-y-6 transition-all duration-500 ${entranceStep >= 3 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            
+            {/* Create Goal Action Card */}
+            <div className="rounded-3xl border border-white/[0.08] bg-slate-950/40 p-6 backdrop-blur-3xl shadow-2xl space-y-4">
+              <div className="flex items-center justify-between border-b border-white/[0.06] pb-3">
+                <div className="flex items-center gap-2">
+                  <Plus className="h-4 w-4 text-accent" />
+                  <h3 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                    New Objective
+                  </h3>
                 </div>
-
-                <div className="grid grid-cols-2 gap-3.5">
-                  <div className="space-y-2">
-                    <label htmlFor="goal-type" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Type
-                    </label>
-                    <select
-                      id="goal-type"
-                      value={type}
-                      onChange={(e) => setType(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                    >
-                      {["sleep", "exercise", "meditation", "hydration", "mood", "custom"].map((t) => (
-                        <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
-                      ))}
-                    </select>
-                  </div>
-                  <div className="space-y-2">
-                    <label htmlFor="goal-freq" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                      Frequency
-                    </label>
-                    <select
-                      id="goal-freq"
-                      value={frequency}
-                      onChange={(e) => setFrequency(e.target.value)}
-                      className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-300 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label htmlFor="goal-target" className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Target <span className="font-medium normal-case text-slate-600">(hours, times, litres)</span>
-                  </label>
-                  <input
-                    id="goal-target"
-                    type="number"
-                    step="0.1"
-                    min="0.1"
-                    value={targetValue}
-                    onChange={(e) => setTargetValue(parseFloat(e.target.value))}
-                    className="w-full bg-slate-950 border border-white/[0.08] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:border-indigo-500/30 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all"
-                  />
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={submitting || !title.trim()}
-                  variant="primary"
-                  className="w-full justify-center active:scale-[0.98] border border-indigo-500/30 mt-2"
-                  size="sm"
+                <button
+                  onClick={() => setShowCreateForm(!showCreateForm)}
+                  className="p-1.5 rounded-xl bg-white/[0.03] hover:bg-white/[0.08] text-slate-300 text-xs font-semibold flex items-center gap-1 transition-all"
                 >
-                  {submitting ? (
-                    <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating…</>
-                  ) : (
-                    <><Plus className="h-3.5 w-3.5" /> Create Goal</>
-                  )}
-                </Button>
-              </form>
-            </Card>
-
-            {/* AI Suggested Goals */}
-            <Card className="space-y-4">
-              <div className="flex items-center justify-between border-b border-white/[0.04] pb-3">
-                <h2 className="text-xs font-bold text-white flex items-center gap-2 uppercase tracking-wider">
-                  <Sparkles className="h-4 w-4 text-violet-400" aria-hidden="true" />
-                  AI Suggestions
-                </h2>
-                <span className="text-[9px] font-bold uppercase text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full tracking-wider">
-                  Smart
-                </span>
+                  {showCreateForm ? <X className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                </button>
               </div>
 
-              {loadingSuggestions ? (
-                <div className="space-y-2">
-                  {[1, 2].map((i) => <div key={i} className="h-16 rounded-2xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />)}
-                </div>
-              ) : suggestedGoals.length === 0 ? (
-                <p className="text-xs text-slate-500 text-center py-6 leading-relaxed">
-                  Your stats look great! Log more check-ins to unlock personalized recommendations.
-                </p>
-              ) : (
-                <div className="space-y-3">
-                  {suggestedGoals.map((suggested, index) => (
-                    <div key={index} className="bg-slate-950/40 border border-white/[0.04] p-3.5 rounded-2xl space-y-2.5">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-xs font-bold text-slate-200">{suggested.title}</p>
-                        <TypeBadge type={suggested.type} />
-                      </div>
-                      {suggested.reason && (
-                        <p className="text-[11px] text-slate-500 leading-relaxed italic">&ldquo;{suggested.reason}&rdquo;</p>
-                      )}
-                      <button
-                        onClick={() => handleAdoptSuggested(suggested)}
-                        className="w-full flex items-center justify-center gap-1.5 bg-indigo-600/10 hover:bg-indigo-600 text-indigo-400 hover:text-white border border-indigo-500/20 font-bold text-[10px] py-2 rounded-xl transition-all"
+              {(showCreateForm || goals.length === 0) && (
+                <form onSubmit={handleCreate} className="space-y-3.5 text-xs animate-fadeIn">
+                  <div className="space-y-1.5">
+                    <label htmlFor="goal-title" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Title
+                    </label>
+                    <input
+                      id="goal-title"
+                      type="text"
+                      placeholder="e.g. 7 hours sleep, 20 min walk..."
+                      value={title}
+                      onChange={(e) => setTitle(e.target.value)}
+                      className="w-full bg-slate-900/60 border border-white/[0.08] rounded-2xl p-3 text-xs text-white placeholder-slate-500 focus:border-accent/40 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label htmlFor="goal-type" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Category
+                      </label>
+                      <select
+                        id="goal-type"
+                        value={type}
+                        onChange={(e) => setType(e.target.value)}
+                        className="w-full bg-slate-900/60 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-200 focus:border-accent/40 focus:outline-none transition-all"
                       >
-                        <Check className="h-3.5 w-3.5" /> Adopt Goal
-                      </button>
+                        {["sleep", "exercise", "meditation", "hydration", "mood", "custom"].map((t) => (
+                          <option key={t} value={t}>{t.charAt(0).toUpperCase() + t.slice(1)}</option>
+                        ))}
+                      </select>
                     </div>
-                  ))}
-                </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="goal-freq" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                        Frequency
+                      </label>
+                      <select
+                        id="goal-freq"
+                        value={frequency}
+                        onChange={(e) => setFrequency(e.target.value)}
+                        className="w-full bg-slate-900/60 border border-white/[0.08] rounded-2xl p-3 text-xs text-slate-200 focus:border-accent/40 focus:outline-none transition-all"
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label htmlFor="goal-target" className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
+                      Target Value
+                    </label>
+                    <input
+                      id="goal-target"
+                      type="number"
+                      step="0.1"
+                      min="0.1"
+                      value={targetValue}
+                      onChange={(e) => setTargetValue(parseFloat(e.target.value) || 1.0)}
+                      className="w-full bg-slate-900/60 border border-white/[0.08] rounded-2xl p-3 text-xs text-white focus:border-accent/40 focus:outline-none transition-all"
+                    />
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={submitting || !title.trim()}
+                    variant="primary"
+                    size="sm"
+                    className="w-full justify-center active:scale-95 border border-accent/40 shadow-lg shadow-accent/20 mt-2"
+                  >
+                    {submitting ? (
+                      <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Creating Objective...</>
+                    ) : (
+                      <><Plus className="h-3.5 w-3.5" /> Create Objective</>
+                    )}
+                  </Button>
+                </form>
               )}
-            </Card>
+            </div>
+
+            {/* AI Companion & Suggestions */}
+            <GoalCompanion
+              emotion={detectedEmotion}
+              suggestedGoals={suggestedGoals}
+              loadingSuggestions={loadingSuggestions}
+              onAdoptSuggested={handleAdoptSuggested}
+            />
+
           </div>
 
-          {/* Right: Active + Completed Goals */}
-          <div className="lg:col-span-8 space-y-6">
-
-            {/* Active Goals */}
-            <section aria-label="Active goals" className="space-y-4">
-              <div className="flex items-center gap-2">
-                <Flame className="h-4 w-4 text-amber-400" aria-hidden="true" />
-                <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  Active Objectives ({activeGoals.length})
-                </h2>
+          {/* Right Column: Active Goals Grid, Wellness Journey & Achievements */}
+          <div className={`lg:col-span-8 space-y-6 transition-all duration-500 ${entranceStep >= 4 ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+            
+            {/* Active Goals Grid */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Flame className="h-4 w-4 text-amber-400" />
+                  <h2 className="text-xs font-extrabold text-white uppercase tracking-wider">
+                    Active Objectives ({activeGoals.length})
+                  </h2>
+                </div>
+                <span className="text-[10px] text-slate-400 font-semibold">
+                  Prioritized for {detectedEmotion}
+                </span>
               </div>
 
               {loading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[1, 2, 3, 4].map((i) => <div key={i} className="h-28 rounded-3xl bg-slate-900/40 animate-pulse border border-white/[0.04]" />)}
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-32 rounded-3xl bg-white/[0.02] animate-pulse border border-white/[0.04]" />
+                  ))}
                 </div>
               ) : activeGoals.length === 0 ? (
-                <div className="rounded-3xl border border-white/[0.04] bg-slate-900/20 p-10 text-center space-y-3 backdrop-blur-xl">
-                  <Target className="h-8 w-8 text-slate-600 mx-auto" aria-hidden="true" />
-                  <p className="text-xs text-slate-400 font-bold">No active goals</p>
-                  <p className="text-xs text-slate-500">Create your first wellness goal or adopt an AI suggestion.</p>
+                <div className="p-8 rounded-3xl border border-white/[0.06] bg-slate-950/40 text-center space-y-2 backdrop-blur-xl">
+                  <Target className="h-8 w-8 text-slate-600 mx-auto" />
+                  <p className="text-xs font-bold text-slate-400">No active objectives</p>
+                  <p className="text-[11px] text-slate-500">Create a goal or adopt an AI suggestion above to begin.</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {activeGoals.map((goal) => (
-                    <div key={goal._id} className="rounded-3xl border border-white/[0.05] bg-slate-900/40 p-5 flex flex-col justify-between gap-4 hover:border-white/10 hover:bg-slate-900/60 transition-all duration-300 shadow-md">
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <FreqBadge freq={goal.frequency} />
-                          {goal.ai_suggested && (
-                            <span className="text-[9px] bg-violet-500/10 border border-violet-500/20 text-violet-300 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wider">
-                              AI
-                            </span>
-                          )}
-                        </div>
-                        <h3 className="text-xs font-bold text-slate-200 leading-snug">{goal.title}</h3>
-                        <div className="flex items-center gap-2">
-                          <TypeBadge type={goal.type} />
-                          <span className="text-[10px] text-slate-500 font-semibold">Target: {goal.target_value}</span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-2 pt-3 border-t border-white/[0.04]">
-                        <button
-                          onClick={() => handleComplete(goal._id)}
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-emerald-500/10 hover:bg-emerald-600 text-emerald-400 hover:text-white border border-emerald-500/20 font-bold text-[10px] py-2 rounded-xl transition-all focus:outline-none focus:ring-1 focus:ring-emerald-500"
-                        >
-                          <Check className="h-3.5 w-3.5" /> Complete
-                        </button>
-                        <button
-                          onClick={() => handleDelete(goal._id)}
-                          className="p-2 bg-white/[0.02] hover:bg-rose-500/10 text-slate-500 hover:text-rose-400 border border-white/[0.04] rounded-xl transition-all focus:outline-none"
-                          aria-label={`Delete goal ${goal.title}`}
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
+                    <GoalCard
+                      key={goal._id}
+                      goal={goal}
+                      onComplete={handleComplete}
+                      onDelete={handleDelete}
+                    />
                   ))}
                 </div>
               )}
-            </section>
+            </div>
 
-            {/* Completed Goals */}
-            {completedGoals.length > 0 && (
-              <section aria-label="Completed goals" className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-emerald-400" aria-hidden="true" />
-                  <h2 className="text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                    Accomplished ({completedGoals.length})
-                  </h2>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {completedGoals.map((goal) => (
-                    <div key={goal._id} className="flex items-center justify-between bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4">
-                      <div className="space-y-0.5 min-w-0">
-                        <h3 className="text-xs font-bold text-slate-400 line-through truncate">{goal.title}</h3>
-                        <p className="text-[10px] text-slate-500 font-semibold">{goal.type} · {goal.target_value}</p>
-                      </div>
-                      <Award className="h-5 w-5 text-emerald-400 shrink-0 ml-3 animate-pulse" aria-hidden="true" />
-                    </div>
-                  ))}
-                </div>
-              </section>
-            )}
+            {/* Wellness Journey Visual Roadmap */}
+            <WellnessJourney
+              activeGoals={activeGoals}
+              completedGoals={completedGoals}
+              onCompleteGoal={handleComplete}
+              onDeleteGoal={handleDelete}
+            />
+
+            {/* Achievements Showcase */}
+            <AchievementPanel
+              streakDays={streakDays}
+              completedCount={completedGoals.length}
+            />
+
           </div>
+
         </div>
       </div>
     </ProtectedRoute>
