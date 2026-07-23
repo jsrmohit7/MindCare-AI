@@ -1,3 +1,4 @@
+
 # MindCare AI - Local Development Guide
 
 MindCare AI is a full-stack mental health copilot combining clinical severity engines, state-of-the-art AI inference pipelines, and cloud database persistence.
@@ -99,4 +100,7 @@ To enable Google Maps integrations, set the following variable in your local fro
 NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your-api-key-here
 ```
 If this key is left undefined, the app will automatically load Leaflet + OpenStreetMap and function with zero API key dependencies.
+
+#Architecture 
+<img width="1536" height="1024" alt="ChatGPT Image Jul 23, 2026, 11_44_29 PM" src="https://github.com/user-attachments/assets/213ad593-82bc-4a77-b8b0-8f5561f92160" />
 
